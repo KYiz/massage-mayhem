@@ -19,6 +19,7 @@ catch {
   const ready = () => page.waitForFunction(() => window.animationQA.state.frame.phase === 'observe');
   await ready();
   const clickZone = async (x = 603, y = 342) => {
+    await page.locator('#stage').scrollIntoViewIfNeeded();
     const rect = await page.locator('#stage').boundingBox();
     await page.mouse.click(rect.x + rect.width * x / 960, rect.y + rect.height * y / 540);
   };
@@ -34,6 +35,7 @@ catch {
   await page.screenshot({ path: path.join(__dirname, 'qa-stage.png'), fullPage: false });
   await page.locator('[data-group="tool"] [data-id="towel"]').click();
   await ready();
+  await page.locator('#stage').scrollIntoViewIfNeeded();
   const footRect = await page.locator('#stage').boundingBox();
   await page.mouse.move(footRect.x + footRect.width * 600 / 960, footRect.y + footRect.height * 389 / 540);
   await page.mouse.down(); await page.waitForTimeout(550);
@@ -48,13 +50,14 @@ catch {
     await page.locator(`[data-group="cast"] [data-id="${technician}"]`).click();
     await page.locator(`[data-group="scene"] [data-id="${targetScene}"]`).click();
     await ready();
+    await page.locator('#stage').scrollIntoViewIfNeeded();
     const rect = await page.locator('#stage').boundingBox();
     await page.mouse.move(rect.x + rect.width * x / 960, rect.y + rect.height * y / 540);
     await page.mouse.down(); await page.waitForTimeout(650);
     const contact = await page.evaluate(() => window.animationQA.state);
     const error = Math.hypot(contact.pose.rightHand.x - contact.pose.target.x, contact.pose.rightHand.y - contact.pose.target.y);
     contacts.push({ technician, scene: targetScene, error: Math.round(error * 10) / 10 });
-    if (!contact.frame.contactActive || error > 12) throw Error(`contact miss ${technician}/${targetScene}: ${error}`);
+    if (!contact.frame.contactActive || error > 12) throw Error(`contact miss ${technician}/${targetScene}: ${error} ${JSON.stringify({frame:contact.frame,pose:contact.pose})}`);
     await page.mouse.up(); await page.waitForTimeout(750);
   }
   await page.locator('[data-group="cast"] [data-id="bao_master"]').click();
@@ -64,10 +67,23 @@ catch {
   await page.waitForTimeout(2500);
   const bao = await page.evaluate(() => window.animationQA.state);
   if (bao.battle.energy !== 0 || bao.battle.comfort < 30) throw Error('Bao skill/rules not synchronized');
+  const baoInventory = await page.locator('#inventory button[data-id]').count();
+  if (baoInventory !== 21) throw Error(`Bao inventory should show hand + 20 items, saw ${baoInventory}`);
+  await page.screenshot({ path: path.join(__dirname, 'qa-bao-inventory.png'), fullPage: true });
+  await page.locator('#reset').click(); await ready();
+  await page.locator('#inventory button[data-id="cake"]').click(); await ready();
+  await clickZone(507, 222); await page.waitForTimeout(1150);
+  const food = await page.evaluate(() => window.animationQA.state.battle);
+  if (food.turns !== 1 || food.spentCoins !== 8 || !food.log.some(e => e.message?.includes('美食招待'))) throw Error('cake did not run food service');
+  await page.locator('[data-group="scene"] [data-id="back"]').click(); await ready();
+  await page.locator('#inventory button[data-id="durian"]').click(); await ready();
+  await clickZone(); await page.waitForTimeout(1150);
+  const prank = await page.evaluate(() => window.animationQA.state.battle);
+  if (prank.turns !== 1 || !prank.log.some(e => e.message?.includes('卡通整蛊'))) throw Error('durian did not run prank service');
   await page.setViewportSize({ width: 390, height: 844 });
   const mobile = await page.evaluate(() => ({ content: document.documentElement.scrollWidth, viewport: document.documentElement.clientWidth }));
   if (mobile.content > mobile.viewport) throw Error(`mobile horizontal overflow: ${mobile.content} > ${mobile.viewport}`);
   if (errors.length) throw Error(`browser errors: ${errors.join(' | ')}`);
-  console.log(JSON.stringify({ clickTurns: first.battle.turns, draggedTargetX: dragging.frame.target.x, joltTurns: interrupted.battle.turns, contactErrors: contacts, baoComfort: bao.battle.comfort, baoEnergy: bao.battle.energy, mobile, browserErrors: errors.length }, null, 2));
+  console.log(JSON.stringify({ clickTurns: first.battle.turns, draggedTargetX: dragging.frame.target.x, joltTurns: interrupted.battle.turns, contactErrors: contacts, baoInventory, cakeCost: food.spentCoins, durianTurns: prank.turns, baoComfort: bao.battle.comfort, baoEnergy: bao.battle.energy, mobile, browserErrors: errors.length }, null, 2));
   await browser.close();
 })().catch(error => { console.error(error); process.exitCode = 1; });

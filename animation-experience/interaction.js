@@ -1,6 +1,7 @@
 // Input-driven performance director. No DOM or rendering dependencies.
 const clamp = (n, a = 0, b = 1) => Math.max(a, Math.min(b, n));
 const length = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+import { castInventory, itemById, offerZones } from './items.js';
 
 export const sceneZones = {
   back: { center: { x: 603, y: 342 }, rx: 93, ry: 52, label: '上背肌肉' },
@@ -10,16 +11,17 @@ export const sceneZones = {
 const durations = { approach: .68, observe: 0, prepare: .14, precontact: .17, contact: .1, release: .23, toolTake: .34, toolReturn: .33, interrupted: .36, recover: .26, signaturePrep: .72, signatureCharge: .53, signaturePose: .3 };
 const ease = v => { const t = clamp(v); return t * t * (3 - 2 * t); };
 
-export function pointInZone(scene, point, margin = 0) {
-  const z = sceneZones[scene];
+function inside(z, point, margin = 0) {
   return Math.pow((point.x - z.center.x) / (z.rx + margin), 2) + Math.pow((point.y - z.center.y) / (z.ry + margin), 2) <= 1;
 }
-export function clampToZone(scene, point) {
-  const z = sceneZones[scene], dx = point.x - z.center.x, dy = point.y - z.center.y;
+function clampPoint(z, point) {
+  const dx = point.x - z.center.x, dy = point.y - z.center.y;
   const radius = Math.sqrt((dx * dx) / (z.rx * z.rx) + (dy * dy) / (z.ry * z.ry));
   if (radius <= 1) return { ...point };
   return { x: z.center.x + dx / radius, y: z.center.y + dy / radius };
 }
+export const pointInZone = (scene, point, margin = 0) => inside(sceneZones[scene], point, margin);
+export const clampToZone = (scene, point) => clampPoint(sceneZones[scene], point);
 
 export class InteractionDirector {
   constructor({ technicianId = 'charming_m', scene = 'back', onEvent = () => {}, contactValidator = () => true } = {}) {
@@ -38,27 +40,34 @@ export class InteractionDirector {
     this.onEvent({ type, interactionId: this.interactionId, technicianId: this.technicianId, scene: this.scene, tool: this.tool, phase: this.phase, ...extra });
   }
   enter(phase) { this.phase = phase; this.phaseTime = 0; this.emit('phase', { next: phase }); }
+  activeZone() { return this.tool !== 'hand' && itemById[this.tool]?.service === 'food' ? offerZones[this.scene] : sceneZones[this.scene]; }
+  actionService() { return itemById[this.tool]?.service || this.service; }
   startApproach() { if (this.phase === 'observe') { this.enter('approach'); return true; } return false; }
   setService(service) { if (this.phase !== 'observe') return false; this.service = service; return true; }
   selectTool(tool) {
-    if (!['hand', 'towel', 'oil'].includes(tool) || this.phase !== 'observe') return false;
+    const item = itemById[tool];
+    if (this.phase !== 'observe') return false;
+    if (this.toolHeld) { if (tool === 'hand') { this.enter('toolReturn'); return true; } return false; }
+    if (tool !== 'hand' && (!item || !item.scenes.includes(this.scene) || !castInventory[this.technicianId]?.includes(tool))) return false;
     this.tool = tool;
     if (tool === 'hand') { this.toolHeld = false; this.emit('toolSelected', { tool }); }
     else this.enter('toolTake');
     return true;
   }
   pointerDown(point) {
-    if (this.phase !== 'observe' || !pointInZone(this.scene, point, 15)) return false;
+    const zone = this.activeZone();
+    if (this.phase !== 'observe' || !inside(zone, point, 15)) return false;
     this.interactionId = ++this.serial; this.pointerActive = true; this.releaseRequested = false;
     this.committed = false; this.signature = false; this.contactActive = false; this.holdTime = 0; this.pathLength = 0; this.pressure = 0;
-    this.target = clampToZone(this.scene, point); this.lastPointer = { ...this.target }; this.guestMood = 'anticipate';
-    this.emit('started', { target: { ...this.target }, service: this.service });
+    this.target = clampPoint(zone, point); this.lastPointer = { ...this.target }; this.guestMood = 'anticipate';
+    this.emit('started', { target: { ...this.target }, service: this.actionService() });
     this.enter('prepare'); return true;
   }
   pointerMove(point, devicePressure = .5) {
     if (!this.pointerActive) return false;
-    if (!pointInZone(this.scene, point, 100)) { this.interrupt('pointer-left-zone'); return false; }
-    const next = clampToZone(this.scene, point);
+    const zone = this.activeZone();
+    if (!inside(zone, point, 100)) { this.interrupt('pointer-left-zone'); return false; }
+    const next = clampPoint(zone, point);
     this.pathLength += length(this.lastPointer, next); this.lastPointer = next; this.target = next;
     this.pressure = Math.max(this.pressure, clamp(devicePressure));
     return true;
@@ -77,12 +86,13 @@ export class InteractionDirector {
     if (hadContact) { this.contactActive = false; this.emit('contactEnd', { reason }); }
     this.guestMood = 'uncomfortable'; this.guestRecoil = 1; this.effectTime = 0;
     if (hadContact && duration >= .12 && !this.committed && !this.signature) {
-      this.committed = true; this.emit('commit', { interrupted: true, quality: 25, service: this.service, duration, pathLength: this.pathLength });
+      this.committed = true; this.emit('commit', { interrupted: true, quality: 25, service: this.actionService(), duration, pathLength: this.pathLength });
     }
     this.emit('interrupted', { reason, hadContact }); this.enter('interrupted'); return true;
   }
   startSignature() {
     if (this.phase !== 'observe') return false;
+    if (this.toolHeld) return false;
     if (this.technicianId === 'bao_master' && this.scene !== 'feet') return false;
     this.interactionId = ++this.serial; this.signature = true; this.committed = false; this.contactActive = false;
     this.target = { ...sceneZones[this.scene].center }; this.guestMood = 'anticipate'; this.effectTime = 0;
@@ -95,12 +105,12 @@ export class InteractionDirector {
     if (this.signature && !this.committed) { this.committed = true; this.emit('skillImpact', { signature: true }); }
   }
   quality() {
-    const z = sceneZones[this.scene];
+    const z = this.activeZone();
     const landing = 1 - clamp(length(this.target, z.center) / Math.max(z.rx, z.ry));
     const path = this.pathLength < 8 ? .65 : clamp(this.pathLength / 140);
     const stability = 1 - clamp(Math.max(0, this.pressure - .85) * 2);
     const completion = clamp(this.holdTime / .55);
-    const toolBonus = this.toolHeld && this.service === 'gentle' ? (this.tool === 'oil' ? 8 : this.tool === 'towel' ? 5 : 0) : 0;
+    const toolBonus = this.toolHeld ? (itemById[this.tool]?.bonus || 0) : 0;
     return Math.round(clamp((.4 * landing + .25 * path + .2 * stability + .15 * completion) * 100 + toolBonus, 0, 100));
   }
   beginRelease() {
@@ -109,7 +119,7 @@ export class InteractionDirector {
     this.guestMood = 'recovering'; this.effectTime = 0;
     if (!this.committed && !this.signature) {
       this.committed = true;
-      this.emit('commit', { interrupted: false, quality: this.quality(), service: this.service, duration: this.holdTime, pathLength: this.pathLength });
+      this.emit('commit', { interrupted: false, quality: this.quality(), service: this.actionService(), duration: this.holdTime, pathLength: this.pathLength });
     }
     this.enter('release');
   }
@@ -129,7 +139,7 @@ export class InteractionDirector {
         if (this.releaseRequested && this.holdTime >= .12) this.beginRelease();
         break;
       case 'release': if (this.phaseTime >= durations.release) this.enter(this.toolHeld ? 'toolReturn' : 'recover'); break;
-      case 'toolReturn': if (this.phaseTime >= durations.toolReturn) { this.toolHeld = false; this.emit('toolReturned'); this.enter('recover'); } break;
+      case 'toolReturn': if (this.phaseTime >= durations.toolReturn) { this.toolHeld = false; this.emit('toolReturned', { returnedTool: this.tool }); this.tool = 'hand'; this.emit('toolSelected', { tool: 'hand' }); this.enter('recover'); } break;
       case 'interrupted': if (this.phaseTime >= durations.interrupted) this.enter(this.toolHeld ? 'toolReturn' : 'recover'); break;
       case 'recover': if (this.phaseTime >= durations.recover) { this.guestMood = 'neutral'; this.signature = false; this.enter('observe'); } break;
       case 'signaturePrep': if (this.phaseTime >= durations.signaturePrep) this.enter('signatureCharge'); break;
@@ -158,7 +168,7 @@ export class InteractionDirector {
       guestRecoil: this.guestRecoil, tool: this.tool, toolHeld: this.toolHeld,
       signature: this.signature, gold: this.signature && this.technicianId === 'bao_master' ? (this.phase === 'signatureCharge' ? ease(p) : this.contactActive ? 1 : this.phase === 'release' ? 1 - ease(p) : 0) : 0,
       watchOn: !(this.signature && this.technicianId === 'bao_master' && !['signaturePrep', 'observe'].includes(this.phase)),
-      holdTime: this.holdTime, quality: this.quality(), service: this.service
+      holdTime: this.holdTime, quality: this.quality(), service: this.actionService(), zone: this.activeZone()
     };
   }
 }

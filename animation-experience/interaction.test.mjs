@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { InteractionDirector, sceneZones } from './interaction.js';
+import { castInventory, items } from './items.js';
+import { heldItemSvg } from './item-art.js';
 
 function advance(d, seconds) { for (let t = 0; t < seconds; t += .02) d.update(.02); }
 function make(id = 'charming_m', scene = 'back') { const events = []; return { d: new InteractionDirector({ technicianId: id, scene, onEvent: e => events.push(e) }), events }; }
@@ -72,4 +74,39 @@ test('Bao skill can only hit the foot scene and fires once', () => {
   assert.equal(d.startSignature(), true); advance(d, 2.6);
   assert.equal(count(events, 'skillImpact'), 1); assert.equal(count(events, 'contactStart'), 1);
   assert.equal(count(events, 'contactEnd'), 1); assert.equal(d.phase, 'observe');
+});
+test('Bao can use all 19 documented props plus concept-image massage cream', () => {
+  assert.equal(items.length, 20);
+  assert.equal(new Set(items.map(item => item.assetId)).size, 20);
+  assert.equal(castInventory.bao_master.length, 20);
+  for (const item of items) {
+    assert.ok(heldItemSvg(item.id, { x: 0, y: 0 }).includes('<g'), `missing held art for ${item.id}`);
+    const { d, events } = make('bao_master', item.scenes[0]);
+    assert.equal(d.selectTool(item.id), true, item.id);
+    advance(d, .45);
+    d.pointerDown(d.activeZone().center); d.pointerUp(); advance(d, 1.5);
+    assert.equal(count(events, 'toolHeld'), 1, item.id);
+    assert.equal(count(events, 'contactStart'), 1, item.id);
+    assert.equal(count(events, 'commit'), 1, item.id);
+    assert.equal(events.find(e => e.type === 'commit').service, item.service, item.id);
+    assert.equal(count(events, 'toolReturned'), 1, item.id);
+    assert.equal(d.tool, 'hand', item.id);
+  }
+});
+test('scene restrictions and smaller inventories remain enforced', () => {
+  const baoBack = make('bao_master', 'back').d;
+  assert.equal(baoBack.selectTool('basin'), false);
+  assert.equal(baoBack.selectTool('hot_stone'), true);
+  const ale = make('charming_m', 'feet').d;
+  assert.equal(ale.selectTool('feather'), false);
+  assert.equal(ale.selectTool('cake'), true);
+});
+test('a held item can be deliberately returned before choosing another', () => {
+  const { d, events } = make('bao_master', 'feet');
+  d.selectTool('salt'); advance(d, .45);
+  assert.equal(d.selectTool('feather'), false);
+  assert.equal(d.selectTool('hand'), true);
+  advance(d, .7);
+  assert.equal(d.tool, 'hand'); assert.equal(count(events, 'toolReturned'), 1);
+  assert.equal(d.selectTool('feather'), true);
 });

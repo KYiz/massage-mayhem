@@ -1,5 +1,6 @@
 import { solveTwoBoneIK } from '../animation-prototype/dist/core.js';
 import { sceneZones } from './interaction.js';
+import { heldItemSvg, itemEffectSvg } from './item-art.js';
 
 const art = {
   back: '../art/concepts/S1_开背_空场景概念.png',
@@ -83,9 +84,7 @@ export class VisualStage {
     let tool = '';
     if (frame.toolHeld || toolTake || isOffer) {
       const hand = isOffer ? left.hand : right.hand;
-      if (frame.tool === 'towel') tool = `<path d="M${p(hand.x - 20)} ${p(hand.y - 9)} Q${p(hand.x)} ${p(hand.y - 20)} ${p(hand.x + 21)} ${p(hand.y - 8)} L${p(hand.x + 25)} ${p(hand.y + 16)} Q${p(hand.x)} ${p(hand.y + 21)} ${p(hand.x - 23)} ${p(hand.y + 14)}Z" fill="#f8f2e7" stroke="#665950" stroke-width="3"/><path d="M${p(hand.x - 17)} ${p(hand.y + 4)} L${p(hand.x + 18)} ${p(hand.y + 4)}" stroke="#bfc7bb" stroke-width="3"/>`;
-      else if (frame.tool === 'oil') tool = `<rect x="${p(hand.x - 11)}" y="${p(hand.y - 18)}" width="23" height="35" rx="5" fill="#9a5a28" stroke="#32251d" stroke-width="3"/><rect x="${p(hand.x - 7)}" y="${p(hand.y - 13)}" width="15" height="21" fill="#f1d38c"/><rect x="${p(hand.x - 5)}" y="${p(hand.y - 25)}" width="11" height="7" rx="2" fill="#332b28"/>`;
-      else if (isOffer) tool = `<path d="M${p(hand.x - 27)} ${p(hand.y + 6)} Q${p(hand.x)} ${p(hand.y + 18)} ${p(hand.x + 30)} ${p(hand.y + 6)}" stroke="#e4d3b6" stroke-width="8" fill="none"/><path d="M${p(hand.x - 12)} ${p(hand.y + 3)} L${p(hand.x)} ${p(hand.y - 16)} L${p(hand.x + 16)} ${p(hand.y + 3)}Z" fill="#f2b5a0" stroke="#7d4742" stroke-width="3"/>`;
+      tool = frame.tool === 'hand' && isOffer ? heldItemSvg('cake', hand) : heldItemSvg(frame.tool, hand, frame.contactActive && frame.tool === 'oil' ? -28 : 0);
     }
     this.parts.toolLayer.innerHTML = tool;
     const gold = frame.gold;
@@ -101,9 +100,10 @@ export class VisualStage {
     set(this.parts.guestFoot, { transform: `translate(${p(recoil * -13)} ${p(-response * 7 - recoil * 10)}) rotate(${p(recoil * -7)} 601 380)` });
     const mood = frame.guestMood;
     set(this.parts.guestMouth, { d: mood === 'responding' ? (this.scene === 'feet' ? 'M493 239 Q508 258 523 237' : this.scene === 'legs' ? 'M391 317 Q405 333 421 315' : 'M399 354 Q414 371 430 350') : mood === 'uncomfortable' ? (this.scene === 'feet' ? 'M497 246 Q509 228 522 244' : this.scene === 'legs' ? 'M394 322 Q406 309 419 322' : 'M401 362 Q415 349 427 362') : (this.scene === 'feet' ? 'M496 240 Q508 246 519 238' : this.scene === 'legs' ? 'M393 319 Q406 325 417 317' : 'M401 354 Q414 363 427 353') });
-    set(this.parts.hotspot, { 'stroke-opacity': frame.phase === 'observe' ? .85 : .25, 'fill-opacity': frame.contactActive ? .03 : .08 });
+    set(this.parts.hotspot, { cx: frame.zone.center.x, cy: frame.zone.center.y, rx: frame.zone.rx, ry: frame.zone.ry, 'stroke-opacity': frame.phase === 'observe' ? .85 : .25, 'fill-opacity': frame.contactActive ? .03 : .08 });
     set(this.parts.pointerMark, { cx: p(frame.target.x), cy: p(frame.target.y), opacity: frame.phase === 'observe' ? 0 : .82 });
     set(this.parts.contactRing, { cx: p(frame.target.x), cy: p(frame.target.y), opacity: frame.contactActive ? .8 : 0, r: p(15 + response * 9) });
+    this.parts.goldLayer.innerHTML += itemEffectSvg(frame.tool, frame.target, time, frame.contactActive);
     return { rightHand: { x: right.hand.x + rootX, y: right.hand.y + y }, target: frame.target, rootX };
   }
 }
