@@ -14,6 +14,7 @@ const labels = { comfort: '舒适', affection: '好感', patience: '耐心', com
 const levels = [{ level: 1, comfortGoal: 95, patience: 90, maxActions: 50, servicePool: ['gentle', 'strong', 'food', 'prank'], scenePool: ['back', 'legs', 'feet'] }];
 let cast = 'charming_m', scene = 'back', service = 'gentle', tool = 'hand', serial = 0;
 let battle, director, pointerId = null, last = performance.now(), latestPose = null;
+let queuedTool = null, queuedService = null, queuedSignature = false, toastTimer = null;
 
 function log(message) {
   const li = document.createElement('li');
@@ -21,7 +22,14 @@ function log(message) {
   $('#log').prepend(li);
   while ($('#log').children.length > 24) $('#log').lastElementChild.remove();
 }
-function feedback(message) { $('#feedback').textContent = message; }
+function feedback(message) {
+  $('#feedback').textContent = message;
+  const toast = $('#stageToast');
+  toast.textContent = message;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+}
 function point(event) {
   const rect = stage.getBoundingClientRect();
   return { x: (event.clientX - rect.left) * 960 / rect.width, y: (event.clientY - rect.top) * 540 / rect.height };
@@ -49,11 +57,12 @@ function updateMetrics() {
     el.querySelector('output').textContent = battle[key];
     el.querySelector('label').textContent = label;
   }
-  $('#signature').textContent = `专属技能 · ${skills[cast]}（能量 ${battle.energy}）`;
+  $('#signature').textContent = `专属技能 · ${skills[cast]}（点击预览）`;
 }
 function reset(clearLog = false) {
   if (pointerId !== null && stage.hasPointerCapture(pointerId)) stage.releasePointerCapture(pointerId);
   pointerId = null;
+  queuedTool = null; queuedService = null; queuedSignature = false;
   battle = beginBattle({ id: `animation-qa-${++serial}`, level: 1, therapistId: cast, guestId: 'foodie', scene, rareOffered: false }, levels);
   battle.energy = 100; // Director QA only; this never touches persistent progress.
   director = new InteractionDirector({ technicianId: cast, scene, onEvent: handleEvent, contactValidator: frame => {
@@ -70,6 +79,32 @@ function reset(clearLog = false) {
   log(`${names[cast]}进入${names[scene]}验证局；点击虚线区域开始。`);
   feedback(`${names[cast]}已就位。点击画面虚线热区；道具会先拿取，再点击热区使用。`);
   updateMetrics();
+}
+function chooseTool(id) {
+  if (id === 'hand' && !director.toolHeld && director.tool === 'hand') { feedback('已处于徒手模式；请点击画面虚线热区。'); return; }
+  if (id !== 'hand' && director.toolHeld) {
+    queuedTool = id;
+    director.selectTool('hand');
+    feedback(`正在放回${itemById[director.tool]?.name || '道具'}；随后自动拿取${itemById[id].name}。`);
+    return;
+  }
+  if (director.selectTool(id)) {
+    tool = director.tool;
+    selectGroup('tool', tool);
+    $('#toolTip').textContent = tool === 'hand' ? '徒手模式。' : `${itemById[tool].name}：${itemById[tool].gesture}；按提示虚线区域操作。`;
+    feedback(tool === 'hand' ? '已切换徒手；请点击画面虚线热区。' : `${itemById[tool].name}拿取中；接着点击画面虚线热区使用。`);
+  }
+}
+function activateSignature() {
+  if (battle.energy < 100) {
+    battle = { ...battle, energy: 100 };
+    updateMetrics();
+    log('导演验证模式：技能能量已补满。');
+  }
+  if (director.startSignature()) {
+    log(`${names[cast]}的${skills[cast]}进入准备、蓄力、出手三段。`);
+    feedback(`${skills[cast]}发动中。`);
+  }
 }
 function handleEvent(event) {
   switch (event.type) {
@@ -105,35 +140,43 @@ function handleEvent(event) {
 $('#metrics').innerHTML = Object.entries(labels).map(([key,label]) => `<div class="metric" data-key="${key}"><label>${label}</label><div class="track"><div class="fill"></div></div><output>0</output></div>`).join('');
 document.querySelectorAll('[data-group="cast"] button').forEach(button => button.addEventListener('click', () => { cast = button.dataset.id; selectGroup('cast', cast); reset(true); }));
 document.querySelectorAll('[data-group="scene"] button').forEach(button => button.addEventListener('click', () => { scene = button.dataset.id; selectGroup('scene', scene); reset(true); }));
-document.querySelectorAll('[data-group="service"] button').forEach(button => button.addEventListener('click', () => { if (director.setService(button.dataset.id)) { service = button.dataset.id; selectGroup('service', service); feedback(`力度已切换为${button.textContent}；在虚线热区操作。`); } else feedback('动作进行中，请等技师回位后再切换力度。'); }));
+document.querySelectorAll('[data-group="service"] button').forEach(button => button.addEventListener('click', () => {
+  service = button.dataset.id; selectGroup('service', service);
+  if (director.setService(service)) feedback(`力度已切换为${button.textContent}；在虚线热区操作。`);
+  else { queuedService = service; feedback(`已选择${button.textContent}，技师回位后自动生效。`); }
+}));
 $('#inventory').addEventListener('click', event => {
   const button = event.target.closest('button[data-id]');
   if (!button) return;
-  if (director.phase !== 'observe') { feedback('技师正在动作中，请等回位后再选择道具。'); return; }
-  if (button.dataset.id !== 'hand') {
-    const availability = itemAvailability(battle, button.dataset.id, 999);
-    if (!availability.ok) { const item = itemById[button.dataset.id]; feedback(`${item.name}暂不可用：${availability.reason}${availability.reason === '此场景不可用' ? `；请切换到${item.scenes.map(key => names[key]).join('或')}` : ''}。`); return; }
+  const id = button.dataset.id, item = itemById[id];
+  if (item && !item.scenes.includes(scene)) {
+    scene = item.scenes[0]; selectGroup('scene', scene); reset(true);
+    log(`${item.name}适用于${names[scene]}；已自动切换场景。`);
+  } else if (battle.status !== 'playing') reset(true);
+  if (id !== 'hand') {
+    const availability = itemAvailability(battle, id, 999);
+    if (!availability.ok) { feedback(`${item.name}暂不可用：${availability.reason}。点击“重置数值”可重新开始验证局。`); return; }
   }
-  if (director.selectTool(button.dataset.id)) {
-    tool = director.tool; selectGroup('tool', tool);
-    $('#toolTip').textContent = director.phase === 'toolReturn' ? `${itemById[tool].name}正在归位。` : tool === 'hand' ? '徒手模式。' : `${itemById[tool].name}：${itemById[tool].gesture}；按提示虚线区域操作。`;
-    feedback(tool === 'hand' ? '已选择徒手。' : `${itemById[tool].name}拿取中，稍后点击虚线热区使用。`);
-  } else feedback('当前不能切换道具，请等待动作结束。');
+  if (director.phase !== 'observe') { queuedTool = id; feedback(`已选${id === 'hand' ? '徒手' : item.name}，技师回位后自动切换。`); return; }
+  chooseTool(id);
 });
 $('#signature').addEventListener('click', () => {
-  if (battle.status !== 'playing') return feedback('本局已结束，请点击“重置数值”。');
-  if (director.phase !== 'observe') return feedback('技师正在动作中，请等回位后使用技能。');
-  if (director.toolHeld) return feedback('请先点击“徒手”，放回道具后再使用技能。');
-  if (cast === 'bao_master' && scene !== 'feet') return feedback('黄金右手只能在足疗场景使用。');
-  if (battle.energy < 100) return feedback(`能量不足：还需 ${100 - battle.energy} 点。`);
-  if (director.startSignature()) { log(`${names[cast]}的${skills[cast]}进入准备、蓄力、出手三段。`); feedback(`${skills[cast]}发动中。`); }
+  if (cast === 'bao_master' && scene !== 'feet') { scene = 'feet'; selectGroup('scene', scene); reset(true); log('黄金右手限定足疗；已自动切换足疗场景。'); }
+  else if (battle.status !== 'playing') reset(true);
+  if (director.phase !== 'observe' || director.toolHeld) {
+    queuedSignature = true; queuedTool = null;
+    if (director.phase === 'observe' && director.toolHeld) director.selectTool('hand');
+    feedback(`${skills[cast]}已排队；当前动作结束后自动发动。`);
+    return;
+  }
+  activateSignature();
 });
 $('#jolt').addEventListener('click', () => { if (director.interrupt('guest-jolt')) feedback('顾客突然乱动：技师闪避并重新观察。'); else feedback('技师已经在处理乱动，请稍候。'); });
 $('#reset').addEventListener('click', () => reset(true));
 document.addEventListener('keydown', event => { if (event.key.toLowerCase() === 'g') director.interrupt('guest-jolt'); });
 stage.addEventListener('pointerdown', event => {
   if (pointerId !== null) return;
-  if (battle.status !== 'playing') return feedback('本局已结束，请点击“重置数值”。');
+  if (battle.status !== 'playing') { reset(true); log('上一局已结束；导演验证局自动重开。'); }
   if (director.pointerDown(point(event))) { pointerId = event.pointerId; stage.setPointerCapture(pointerId); feedback('已锁定接触点，技师正在准备动作。'); event.preventDefault(); }
   else feedback(director.phase === 'observe' ? '请点击画面中的虚线热区；招待道具的热区在顾客面前。' : '动作尚未结束，请等技师回位后操作。');
 });
@@ -143,6 +186,14 @@ stage.addEventListener('pointercancel', event => { if (event.pointerId === point
 function tick(now) {
   const dt = Math.max(0, Math.min(.05, (now - last) / 1000)); last = now;
   director.update(dt);
+  if (director.phase === 'observe') {
+    if (queuedService) { director.setService(queuedService); queuedService = null; }
+    if (queuedSignature) {
+      if (director.toolHeld) director.selectTool('hand');
+      else { queuedSignature = false; activateSignature(); }
+    }
+    else if (queuedTool) { const next = queuedTool; queuedTool = null; chooseTool(next); }
+  }
   const frame = director.frame();
   latestPose = visual.render(frame, now / 1000);
   if (frame.contactActive && cast === 'bao_master' && scene === 'feet' && frame.signature) $('#hint').textContent = '黄金右手接触中：手掌位置、足底反馈和投诉数值同步';
