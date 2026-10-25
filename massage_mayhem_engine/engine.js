@@ -171,6 +171,7 @@ export const guests=[
 {id:'gentle',name:'高冷白领',look:'😐',preferences:{gentle:95,strong:12,food:25,dance:8,prank:9},charmPreference:35,patience:57,complaintBase:20,goal:82,disposition:'社恐'},
 {id:'strong',name:'硬核运动员',look:'💪',preferences:{gentle:22,strong:98,food:35,dance:30,prank:55},charmPreference:30,patience:86,complaintBase:10,goal:92,disposition:'吃力'},
 {id:'flirt',name:'派对达人',look:'😍',preferences:{gentle:42,strong:54,food:32,dance:97,prank:70},charmPreference:98,patience:69,complaintBase:12,goal:89,disposition:'爱玩'},
+{id:'picky',name:'挑剔型顾客',look:'🧐',preferences:{gentle:68,strong:34,food:27,dance:20,prank:12},charmPreference:30,patience:54,complaintBase:24,goal:87,disposition:'挑剔'},
 {id:'tricky',name:'坏笑挑剔客',look:'😏',preferences:{gentle:65,strong:32,food:14,dance:40,prank:57},charmPreference:65,patience:43,complaintBase:36,goal:98,disposition:'刁钻'},
 {id:'goofy',name:'呆萌顾客',look:'🤪',preferences:{gentle:62,strong:54,food:78,dance:65,prank:92},charmPreference:70,patience:78,complaintBase:9,goal:80,disposition:'憨憨'}
 ];
