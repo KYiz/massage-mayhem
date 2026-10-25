@@ -9,15 +9,16 @@
   </style>
 </head>
 <body>
-<header><h1>Massage Mayhem｜第一批动画体验</h1><p class="sub">导演验证模式 · 3 名不同体型技师＋1 名顾客 · 点击、长按、拖动、松开、道具与打断均可操作</p></header>
+<header><h1>Massage Mayhem｜全技师交互样机</h1><p class="sub">8 名技师可切换 · 点击、长按、拖动、松开、道具与打断均可操作；正式角色分层美术仍待制作</p></header>
 <main>
   <section class="card"><div class="stagebar"><span id="castTitle">阿烈 · 开背</span><span class="badge">分层 SVG 试制 · 正式美术待制作</span></div><div class="stagewrap"><svg id="stage" viewBox="0 0 960 540" aria-label="按摩互动场景"></svg><div class="hint" id="hint">在虚线热区点击或按住并拖动；按 G 模拟顾客乱动</div></div>
   <div class="controls">
-    <div class="group" data-group="cast"><b>技师</b><button data-id="charming_m" class="active">阿烈</button><button data-id="aunt">芬姨</button><button data-id="bao_master">包师傅</button></div>
+    <div class="group" data-group="cast"><b>技师</b><button data-id="charming_m" class="active">阿烈</button><button data-id="charming_f">小曼</button><button data-id="uncle">老冯</button><button data-id="aunt">芬姨</button><button data-id="gentle">岚姐</button><button data-id="power">阿虎</button><button data-id="joker">小周</button><button data-id="bao_master">包师傅</button></div>
     <div class="group" data-group="scene"><b>场景</b><button data-id="back" class="active">开背</button><button data-id="legs">压腿</button><button data-id="feet">足疗</button></div>
     <div class="group" data-group="service"><b>力度</b><button data-id="gentle" class="active">轻柔</button><button data-id="strong">大力</button></div>
     <div class="inventory" data-group="tool"><h3 id="inventoryTitle">道具</h3><div id="inventory"></div><p class="propnote" id="toolTip">选择道具后，在虚线区域点击、长按或拖动。</p></div>
     <div class="group"><button id="signature" class="gold">专属技能（演示能量已满）</button><button id="jolt" class="action">顾客突然乱动</button><button id="reset">重置数值</button></div>
+    <p id="feedback" class="propnote" role="status" aria-live="polite">在虚线热区点击或拖动。若道具不适用当前场景，点击它会显示原因。</p>
   </div></section>
   <aside class="card side"><h2>双角色事件与数值</h2><div id="metrics"></div><div class="phase" id="phase">观察 · 寻找接触点</div><ol class="log" id="log"></ol><div class="warning">本样机调用现有规则引擎，数值为真实规则返回值；为便于动作验收，技师、道具、能量与关卡均在独立验证局重置，不写入游戏存档。<br><br>视觉验收状态：<strong>未通过</strong>。当前人物是可分层、可换装的 SVG 占位绑定，尚缺正式原画分层、补绘、表情组件、绑定和中间帧。</div></aside>
   <section class="card boards"><h2>静态关键姿势参考</h2><p>这三张图用于导演审批动作与节拍；图片本身不是可绑骨骼、连续动画或正式角色素材。</p><div class="boardgrid"><figure><img src="../docs/animation/storyboards/ale_back_six_poses.png" alt="阿烈开背六姿势分镜"><figcaption>阿烈｜开背 P0–P5</figcaption></figure><figure><img src="../docs/animation/storyboards/aunt_feet_six_poses.png" alt="芬姨足疗六姿势分镜"><figcaption>芬姨｜足疗 P0–P5</figcaption></figure><figure><img src="../docs/animation/storyboards/bao_skill_timing_provisional.png" alt="包师傅技能节拍临时参考"><figcaption>包师傅｜技能节拍临时稿（袜套练习模型；不作为正式足疗画面签核）</figcaption></figure></div></section>

@@ -12,7 +12,8 @@ const { itemAvailability, itemTuning, performItem } = __require("animation-exper
 const $ = selector => document.querySelector(selector);
 const stage = $('#stage');
 const visual = new VisualStage(stage);
-const names = { charming_m: '阿烈', aunt: '芬姨', bao_master: '包师傅', back: '开背', legs: '压腿', feet: '足疗' };
+const names = { charming_m: '阿烈', charming_f: '小曼', uncle: '老冯', aunt: '芬姨', gentle: '岚姐', power: '阿虎', joker: '小周', bao_master: '包师傅', back: '开背', legs: '压腿', feet: '足疗' };
+const skills = { charming_m: '飞吻', charming_f: '爱心手势', uncle: '蓄力推拿', aunt: '递美食', gentle: '精准按压', power: '重压足疗', joker: '整蛊石化', bao_master: '黄金右手' };
 const phases = { approach: '入场 · 步态与转身', observe: '观察顾客 · 寻找接触点', prepare: '准备 · 转身和重心调整', precontact: '接触前 · 手掌悬停', contact: '接触 · 掌心落点', hold: '持续接触 · 跟随玩家', release: '松手 · 顾客停止持续反馈', recover: '回位 · 重找落点', toolTake: '拿取道具 · 握持切换', toolReturn: '工具归位', interrupted: '打断 · 躲避并重新观察', signaturePrep: '专属技能 · 准备', signatureCharge: '专属技能 · 蓄力', signaturePose: '专属技能 · 出手' };
 const labels = { comfort: '舒适', affection: '好感', patience: '耐心', complaint: '投诉', energy: '能量' };
 const levels = [{ level: 1, comfortGoal: 95, patience: 90, maxActions: 50, servicePool: ['gentle', 'strong', 'food', 'prank'], scenePool: ['back', 'legs', 'feet'] }];
@@ -25,6 +26,7 @@ function log(message) {
   $('#log').prepend(li);
   while ($('#log').children.length > 24) $('#log').lastElementChild.remove();
 }
+function feedback(message) { $('#feedback').textContent = message; }
 function point(event) {
   const rect = stage.getBoundingClientRect();
   return { x: (event.clientX - rect.left) * 960 / rect.width, y: (event.clientY - rect.top) * 540 / rect.height };
@@ -39,7 +41,7 @@ function renderInventory() {
   $('#inventory').innerHTML = `<div class="propgrid"><button data-id="hand" class="active">✋ 徒手</button></div>` + groups.map(group => {
     const groupItems = owned.filter(item => item.group === group);
     if (!groupItems.length) return '';
-    return `<div class="propgroup"><strong>${group}</strong><div class="propgrid">${groupItems.map(item => { const available = itemAvailability(battle, item.id, 999); const remaining = Math.max(0, itemTuning[item.id].stock - (battle.itemUses?.[item.id] || 0)); return `<button data-id="${item.id}" title="${item.gesture}｜${item.scenes.map(key => names[key]).join('、')}｜${available.reason || `本局剩余 ${remaining} 次`}" class="${item.scenes.includes(scene) ? '' : 'offscene'}" ${available.ok ? '' : 'disabled'}>${item.icon} ${item.name} <small>×${remaining}</small></button>`; }).join('')}</div></div>`;
+    return `<div class="propgroup"><strong>${group}</strong><div class="propgrid">${groupItems.map(item => { const available = itemAvailability(battle, item.id, 999); const remaining = Math.max(0, itemTuning[item.id].stock - (battle.itemUses?.[item.id] || 0)); return `<button data-id="${item.id}" title="${item.gesture}｜${item.scenes.map(key => names[key]).join('、')}｜${available.reason || `本局剩余 ${remaining} 次`}" class="${item.scenes.includes(scene) ? '' : 'offscene'}">${item.icon} ${item.name} <small>×${remaining}</small></button>`; }).join('')}</div></div>`;
   }).join('');
   selectGroup('tool', tool);
   $('#toolTip').textContent = tool === 'hand' ? '选择道具后，在虚线区域点击、长按或拖动。招待类的虚线热区会移到顾客面前。' : `${itemById[tool].name}：${itemById[tool].gesture}；适用${itemById[tool].scenes.map(key => names[key]).join('、')}。`;
@@ -52,7 +54,7 @@ function updateMetrics() {
     el.querySelector('output').textContent = battle[key];
     el.querySelector('label').textContent = label;
   }
-  $('#signature').disabled = director.phase !== 'observe' || battle.status !== 'playing' || director.toolHeld || (cast === 'bao_master' && scene !== 'feet');
+  $('#signature').textContent = `专属技能 · ${skills[cast]}（能量 ${battle.energy}）`;
 }
 function reset(clearLog = false) {
   if (pointerId !== null && stage.hasPointerCapture(pointerId)) stage.releasePointerCapture(pointerId);
@@ -68,10 +70,10 @@ function reset(clearLog = false) {
   tool = 'hand'; selectGroup('tool', tool);
   visual.setCast(cast, scene);
   renderInventory();
-  director.startApproach();
   $('#castTitle').textContent = `${names[cast]} · ${names[scene]}`;
   if (clearLog) $('#log').replaceChildren();
   log(`${names[cast]}进入${names[scene]}验证局；点击虚线区域开始。`);
+  feedback(`${names[cast]}已就位。点击画面虚线热区；道具会先拿取，再点击热区使用。`);
   updateMetrics();
 }
 function handleEvent(event) {
@@ -94,9 +96,9 @@ function handleEvent(event) {
     case 'skillImpact': {
       if (battle.status !== 'playing') break;
       const before = battle;
-      if (cast === 'aunt') battle = performService(battle, levels, 'food', 90, 999);
+      if (cast === 'aunt') battle = { ...performService(battle, levels, 'food', 90, 999), energy: 0 };
       else battle = useSkill(battle);
-      log(`#${event.interactionId} ${cast === 'aunt' ? '芬姨递美食' : cast === 'charming_m' ? '阿烈飞吻' : '包师傅黄金右手'}命中；舒适 ${battle.comfort - before.comfort >= 0 ? '+' : ''}${battle.comfort - before.comfort}，好感 ${battle.affection - before.affection >= 0 ? '+' : ''}${battle.affection - before.affection}。`);
+      log(`#${event.interactionId} ${names[cast]}${skills[cast]}命中；舒适 ${battle.comfort - before.comfort >= 0 ? '+' : ''}${battle.comfort - before.comfort}，好感 ${battle.affection - before.affection >= 0 ? '+' : ''}${battle.affection - before.affection}。`);
       updateMetrics();
       break;
     }
@@ -108,23 +110,37 @@ function handleEvent(event) {
 $('#metrics').innerHTML = Object.entries(labels).map(([key,label]) => `<div class="metric" data-key="${key}"><label>${label}</label><div class="track"><div class="fill"></div></div><output>0</output></div>`).join('');
 document.querySelectorAll('[data-group="cast"] button').forEach(button => button.addEventListener('click', () => { cast = button.dataset.id; selectGroup('cast', cast); reset(true); }));
 document.querySelectorAll('[data-group="scene"] button').forEach(button => button.addEventListener('click', () => { scene = button.dataset.id; selectGroup('scene', scene); reset(true); }));
-document.querySelectorAll('[data-group="service"] button').forEach(button => button.addEventListener('click', () => { if (director.setService(button.dataset.id)) { service = button.dataset.id; selectGroup('service', service); } }));
+document.querySelectorAll('[data-group="service"] button').forEach(button => button.addEventListener('click', () => { if (director.setService(button.dataset.id)) { service = button.dataset.id; selectGroup('service', service); feedback(`力度已切换为${button.textContent}；在虚线热区操作。`); } else feedback('动作进行中，请等技师回位后再切换力度。'); }));
 $('#inventory').addEventListener('click', event => {
   const button = event.target.closest('button[data-id]');
-  if (!button || button.disabled) return;
-  if (button.dataset.id !== 'hand' && !itemAvailability(battle, button.dataset.id, 999).ok) return;
+  if (!button) return;
+  if (director.phase !== 'observe') { feedback('技师正在动作中，请等回位后再选择道具。'); return; }
+  if (button.dataset.id !== 'hand') {
+    const availability = itemAvailability(battle, button.dataset.id, 999);
+    if (!availability.ok) { const item = itemById[button.dataset.id]; feedback(`${item.name}暂不可用：${availability.reason}${availability.reason === '此场景不可用' ? `；请切换到${item.scenes.map(key => names[key]).join('或')}` : ''}。`); return; }
+  }
   if (director.selectTool(button.dataset.id)) {
     tool = director.tool; selectGroup('tool', tool);
     $('#toolTip').textContent = director.phase === 'toolReturn' ? `${itemById[tool].name}正在归位。` : tool === 'hand' ? '徒手模式。' : `${itemById[tool].name}：${itemById[tool].gesture}；按提示虚线区域操作。`;
-  }
+    feedback(tool === 'hand' ? '已选择徒手。' : `${itemById[tool].name}拿取中，稍后点击虚线热区使用。`);
+  } else feedback('当前不能切换道具，请等待动作结束。');
 });
-$('#signature').addEventListener('click', () => { if (director.startSignature()) log('专属动作进入准备、蓄力、出手三段。'); });
-$('#jolt').addEventListener('click', () => director.interrupt('guest-jolt'));
+$('#signature').addEventListener('click', () => {
+  if (battle.status !== 'playing') return feedback('本局已结束，请点击“重置数值”。');
+  if (director.phase !== 'observe') return feedback('技师正在动作中，请等回位后使用技能。');
+  if (director.toolHeld) return feedback('请先点击“徒手”，放回道具后再使用技能。');
+  if (cast === 'bao_master' && scene !== 'feet') return feedback('黄金右手只能在足疗场景使用。');
+  if (battle.energy < 100) return feedback(`能量不足：还需 ${100 - battle.energy} 点。`);
+  if (director.startSignature()) { log(`${names[cast]}的${skills[cast]}进入准备、蓄力、出手三段。`); feedback(`${skills[cast]}发动中。`); }
+});
+$('#jolt').addEventListener('click', () => { if (director.interrupt('guest-jolt')) feedback('顾客突然乱动：技师闪避并重新观察。'); else feedback('技师已经在处理乱动，请稍候。'); });
 $('#reset').addEventListener('click', () => reset(true));
 document.addEventListener('keydown', event => { if (event.key.toLowerCase() === 'g') director.interrupt('guest-jolt'); });
 stage.addEventListener('pointerdown', event => {
-  if (pointerId !== null || battle.status !== 'playing') return;
-  if (director.pointerDown(point(event))) { pointerId = event.pointerId; stage.setPointerCapture(pointerId); event.preventDefault(); }
+  if (pointerId !== null) return;
+  if (battle.status !== 'playing') return feedback('本局已结束，请点击“重置数值”。');
+  if (director.pointerDown(point(event))) { pointerId = event.pointerId; stage.setPointerCapture(pointerId); feedback('已锁定接触点，技师正在准备动作。'); event.preventDefault(); }
+  else feedback(director.phase === 'observe' ? '请点击画面中的虚线热区；招待道具的热区在顾客面前。' : '动作尚未结束，请等技师回位后操作。');
 });
 stage.addEventListener('pointermove', event => { if (event.pointerId === pointerId) director.pointerMove(point(event), event.pressure || .5); });
 stage.addEventListener('pointerup', event => { if (event.pointerId === pointerId) { director.pointerUp(); pointerId = null; event.preventDefault(); } });
@@ -708,7 +724,7 @@ class InteractionDirector {
   }
   pointerCancel() { if (this.phase !== 'observe') this.interrupt('pointer-cancel'); }
   interrupt(reason = 'guest-jolt') {
-    if (this.phase === 'observe' || this.phase === 'interrupted' || this.phase === 'recover') return false;
+    if (this.phase === 'interrupted' || this.phase === 'recover') return false;
     const hadContact = this.contactActive, duration = this.holdTime;
     this.pointerActive = false; this.releaseRequested = false;
     if (hadContact) { this.contactActive = false; this.emit('contactEnd', { reason }); }
@@ -840,7 +856,12 @@ const items = [
 const itemById = Object.fromEntries(items.map(item => [item.id, item]));
 const castInventory = {
   charming_m: ['towel','oil','cake'],
+  charming_f: ['towel','oil','massage_cream','cake','milk_tea','feather'],
+  uncle: ['towel','oil','hot_stone','guasha','hammer','scrub'],
   aunt: ['towel','oil','cake','basin','milk_tea'],
+  gentle: ['towel','oil','massage_cream','hot_stone','guasha','footcare'],
+  power: ['towel','oil','hammer','basin','scrub','footcare'],
+  joker: ['towel','oil','slipper','glow_slipper','banana','feather','cake'],
   bao_master: items.map(item => item.id)
 };
 const playableFor = (cast, scene) => items.filter(item => castInventory[cast]?.includes(item.id) && item.scenes.includes(scene));
@@ -869,7 +890,12 @@ const art = {
 };
 const specs = {
   charming_m: { name: '阿烈', shirt: '#302125', accent: '#9d2737', skin: '#d79572', hair: '#291b1d', width: 42, head: 34, upper: 68, lower: 63, hand: 13, rest: 'cocky' },
+  charming_f: { name: '小曼', shirt: '#30232e', accent: '#df7193', skin: '#e4a48b', hair: '#37202d', width: 37, head: 31, upper: 60, lower: 57, hand: 12, rest: 'graceful' },
+  uncle: { name: '老冯', shirt: '#ded6c7', accent: '#354965', skin: '#ba8267', hair: '#62646b', width: 62, head: 37, upper: 79, lower: 71, hand: 17, rest: 'steady' },
   aunt: { name: '芬姨', shirt: '#e2b187', accent: '#497f56', skin: '#dea47f', hair: '#493025', width: 65, head: 37, upper: 62, lower: 56, hand: 14, rest: 'warm' },
+  gentle: { name: '岚姐', shirt: '#29242b', accent: '#903947', skin: '#dda386', hair: '#252329', width: 38, head: 30, upper: 66, lower: 59, hand: 12, rest: 'precise' },
+  power: { name: '阿虎', shirt: '#345379', accent: '#e79b49', skin: '#c58a69', hair: '#272528', width: 70, head: 34, upper: 83, lower: 75, hand: 18, rest: 'powerful' },
+  joker: { name: '小周', shirt: '#acc1ce', accent: '#d1b38c', skin: '#e0ad90', hair: '#4a3530', width: 43, head: 35, upper: 58, lower: 55, hand: 12, rest: 'nervous' },
   bao_master: { name: '包师傅', shirt: '#e6ded1', accent: '#bb913f', skin: '#c4835d', hair: '#27231f', width: 67, head: 38, upper: 83, lower: 76, hand: 18, rest: 'heavy' }
 };
 const baseX = { back: 446, legs: 458, feet: 450 };
@@ -880,12 +906,21 @@ const p = (n) => Math.round(n * 10) / 10;
 
 function hairMarkup(id) {
   if (id === 'charming_m') return `<path d="M-37 -215 Q-52 -243 -32 -256 L-39 -270 L-21 -264 Q-8 -284 2 -271 L13 -282 L16 -267 Q35 -275 42 -253 L51 -247 L38 -236 Q43 -220 31 -217 Q11 -244 -4 -234 Q-22 -231 -37 -215Z" fill="#24191c" stroke="#211619" stroke-width="5"/><path d="M-32 -242 Q-18 -257 -11 -244 M5 -263 Q14 -249 23 -251 M34 -243 L39 -224" stroke="#8b2938" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+  if (id === 'charming_f') return `<path d="M-35 -225 Q-44 -260 -12 -268 Q10 -277 37 -251 L39 -218 Q13 -244 -32 -219Z" fill="#352027" stroke="#211619" stroke-width="5"/><path d="M27 -260 Q70 -282 57 -231 Q51 -207 62 -189" fill="none" stroke="#352027" stroke-width="19" stroke-linecap="round"/><path d="M31 -264 L46 -271 L45 -255Z" fill="#df7193"/>`;
+  if (id === 'uncle') return `<path d="M-35 -244 Q0 -265 37 -244 L37 -227 Q0 -239 -35 -227Z" fill="#62646b" stroke="#34353a" stroke-width="5"/><path d="M-24 -216 L-8 -219 M10 -219 L28 -215" stroke="#34353a" stroke-width="7"/>`;
   if (id === 'aunt') return `<g fill="#493025" stroke="#30211f" stroke-width="4"><circle cx="-30" cy="-240" r="15"/><circle cx="-14" cy="-259" r="16"/><circle cx="5" cy="-263" r="16"/><circle cx="26" cy="-249" r="17"/><circle cx="35" cy="-229" r="14"/></g><path d="M-29 -262 Q2 -279 31 -258" stroke="#e9b582" stroke-width="8" fill="none"/>`;
+  if (id === 'gentle') return `<path d="M-35 -240 Q-25 -267 14 -267 Q42 -256 36 -219 L24 -225 Q1 -246 -31 -216Z" fill="#252329" stroke="#1d1b1e" stroke-width="5"/><path d="M-25 -210 H-4 M7 -210 H28 M-4 -210 H7" stroke="#b8925d" stroke-width="3" fill="none"/>`;
+  if (id === 'power') return `<path d="M-36 -246 Q-2 -264 35 -246 L34 -226 Q0 -236 -35 -225Z" fill="#252429" stroke="#1b1b1f" stroke-width="6"/>`;
+  if (id === 'joker') return `<path d="M-39 -242 Q-32 -277 3 -271 Q38 -274 41 -243 L37 -217 Q5 -240 -36 -217Z" fill="#49362f" stroke="#2d2421" stroke-width="5"/><path d="M-35 -238 Q0 -224 37 -239" fill="none" stroke="#382b27" stroke-width="5"/>`;
   return `<path d="M-40 -242 Q-35 -268 -13 -265 L-1 -273 L11 -264 Q36 -268 41 -240 Q17 -252 2 -244 Q-18 -252 -40 -242Z" fill="#26231f" stroke="#211b1b" stroke-width="5"/><path d="M-21 -264 L-22 -249 M3 -270 L6 -247 M24 -262 L26 -247" stroke="#594037" stroke-width="4"/>`;
 }
 function costumeMarkup(id, s) {
   if (id === 'charming_m') return `<path d="M-${s.width} -167 Q-14 -188 0 -177 Q21 -190 ${s.width} -166 L${s.width + 9} -53 Q0 -35 -${s.width + 5} -53Z" fill="${s.shirt}" stroke="#261b1d" stroke-width="7"/><path d="M-21 -173 L2 -113 L20 -172 L-1 -152Z" fill="#b87861" stroke="#271d20" stroke-width="4"/><path d="M-28 -169 L-1 -124 L-19 -136 L-45 -166Z M27 -168 L4 -123 L24 -137 L43 -164Z" fill="${s.accent}" stroke="#1c171b" stroke-width="3"/><path d="M-51 -87 Q0 -72 52 -86 L44 -66 Q0 -57 -46 -67Z" fill="#742a34" stroke="#24191d" stroke-width="4"/><path d="M-31 -81 Q-48 -50 -61 -42 M-27 -79 Q-16 -53 -9 -44" stroke="#a83544" stroke-width="9" stroke-linecap="round"/>`;
+  if (id === 'charming_f' || id === 'gentle') return `<path d="M-${s.width + 5} -169 Q0 -191 ${s.width + 5} -169 L${s.width + 9} -53 Q0 -37 -${s.width + 9} -53Z" fill="${s.shirt}" stroke="#261d22" stroke-width="7"/><path d="M-26 -169 L0 -120 L24 -170 M-44 -82 Q0 -68 45 -82" fill="none" stroke="${s.accent}" stroke-width="9"/><path d="M0 -120 L0 -56" stroke="${s.accent}" stroke-width="5"/>`;
+  if (id === 'uncle') return `<path d="M-62 -171 Q0 -186 62 -171 L72 -53 Q0 -31 -72 -53Z" fill="${s.shirt}" stroke="#302723" stroke-width="7"/><path d="M-45 -169 L-38 -60 M42 -169 L36 -60" fill="none" stroke="#708096" stroke-width="12"/><path d="M-52 -104 Q0 -88 54 -101" fill="none" stroke="${s.accent}" stroke-width="10"/><path d="M-62 -169 L-74 -123" stroke="#f0e5d5" stroke-width="13"/>`;
   if (id === 'aunt') return `<path d="M-59 -167 Q0 -185 61 -165 Q79 -116 66 -52 Q0 -28 -68 -51 Q-79 -115 -59 -167Z" fill="${s.shirt}" stroke="#2e2220" stroke-width="7"/><path d="M-41 -158 Q-52 -120 -50 -54 Q0 -26 54 -57 Q54 -122 39 -159Z" fill="#4f8658" stroke="#2d3830" stroke-width="5"/><path d="M-40 -156 Q0 -130 40 -155 M-49 -90 Q0 -80 52 -88" stroke="#f0d6aa" stroke-width="7" fill="none"/><g fill="#f0ddad"><circle cx="-23" cy="-111" r="5"/><circle cx="8" cy="-95" r="6"/><circle cx="27" cy="-124" r="5"/><circle cx="-5" cy="-65" r="5"/></g><g fill="#edb36e"><circle cx="-23" cy="-111" r="2"/><circle cx="8" cy="-95" r="2"/><circle cx="27" cy="-124" r="2"/></g>`;
+  if (id === 'power') return `<path d="M-73 -167 Q0 -194 73 -167 L80 -53 Q0 -29 -80 -53Z" fill="${s.shirt}" stroke="#222b36" stroke-width="8"/><path d="M-51 -169 L-43 -57 M53 -169 L44 -57" stroke="${s.accent}" stroke-width="13"/><path d="M-75 -76 Q0 -58 76 -76" stroke="#243750" stroke-width="13"/>`;
+  if (id === 'joker') return `<path d="M-48 -169 Q0 -185 48 -169 L58 -43 Q0 -24 -58 -43Z" fill="${s.shirt}" stroke="#394755" stroke-width="7"/><path d="M-53 -159 Q0 -142 53 -159 M-29 -106 L-5 -106 L-5 -79 L-29 -79Z" fill="none" stroke="${s.accent}" stroke-width="6"/><path d="M-27 -102 L-8 -93" stroke="#765546" stroke-width="3"/>`;
   return `<path d="M-63 -168 Q0 -188 65 -168 Q84 -116 70 -51 Q0 -26 -72 -49 Q-87 -112 -63 -168Z" fill="${s.shirt}" stroke="#302621" stroke-width="7"/><path d="M-25 -169 L-2 -146 L22 -170 M-1 -146 L-1 -73" fill="none" stroke="#917f70" stroke-width="4"/><path d="M-67 -64 Q0 -49 71 -64 L63 -49 Q0 -37 -64 -49Z" fill="#2b2929" stroke="#221e1d" stroke-width="4"/><path d="M-35 -61 Q-45 -27 -40 -15 Q-19 -13 -17 -49 M-24 -59 Q-23 -37 -8 -29" stroke="#f3ede2" stroke-width="13" fill="none" stroke-linecap="round"/>`;
 }
 function actorMarkup(id) {

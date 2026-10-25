@@ -80,7 +80,7 @@ export class InteractionDirector {
   }
   pointerCancel() { if (this.phase !== 'observe') this.interrupt('pointer-cancel'); }
   interrupt(reason = 'guest-jolt') {
-    if (this.phase === 'observe' || this.phase === 'interrupted' || this.phase === 'recover') return false;
+    if (this.phase === 'interrupted' || this.phase === 'recover') return false;
     const hadContact = this.contactActive, duration = this.holdTime;
     this.pointerActive = false; this.releaseRequested = false;
     if (hadContact) { this.contactActive = false; this.emit('contactEnd', { reason }); }

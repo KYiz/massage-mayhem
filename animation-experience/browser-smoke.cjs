@@ -27,6 +27,25 @@ catch {
   await page.waitForTimeout(1200);
   const first = await page.evaluate(() => ({ battle: window.animationQA.state.battle, frame: window.animationQA.state.frame, pose: window.animationQA.state.pose }));
   if (first.battle.turns !== 1) throw Error(`click did not commit once: ${first.battle.turns}`);
+  const castIds = ['charming_m','charming_f','uncle','aunt','gentle','power','joker','bao_master'];
+  if (await page.locator('[data-group="cast"] button').count() !== castIds.length) throw Error('eight technicians are not selectable');
+  for (const id of castIds) {
+    await page.locator(`[data-group="cast"] [data-id="${id}"]`).click();
+    if (id === 'bao_master') await page.locator('[data-group="scene"] [data-id="feet"]').click();
+    const state = await page.evaluate(() => window.animationQA.state);
+    if (state.battle.therapistId !== id || !state.pose?.rightHand) throw Error(`cast ${id} did not render`);
+    if (await page.locator('#inventory button[data-id]').count() < 2) throw Error(`cast ${id} has no tools`);
+    await page.locator('#signature').click();
+    await page.waitForFunction(() => window.animationQA.state.battle.energy === 0, { timeout: 3500 });
+  }
+  await page.locator('[data-group="cast"] [data-id="bao_master"]').click();
+  await page.locator('[data-group="scene"] [data-id="back"]').click();
+  await page.locator('#inventory button[data-id="basin"]').click();
+  if (!(await page.locator('#feedback').textContent()).includes('此场景不可用')) throw Error('unavailable prop gave no reason');
+  await page.locator('#signature').click();
+  if (!(await page.locator('#feedback').textContent()).includes('只能在足疗')) throw Error('Bao skill gave no scene reason');
+  await page.locator('#jolt').click();
+  if ((await page.evaluate(() => window.animationQA.state.frame.phase)) !== 'interrupted') throw Error('idle jolt gave no reaction');
   await page.locator('[data-group="cast"] [data-id="aunt"]').click();
   await page.locator('[data-group="scene"] [data-id="feet"]').click();
   await ready();
@@ -84,6 +103,6 @@ catch {
   const mobile = await page.evaluate(() => ({ content: document.documentElement.scrollWidth, viewport: document.documentElement.clientWidth }));
   if (mobile.content > mobile.viewport) throw Error(`mobile horizontal overflow: ${mobile.content} > ${mobile.viewport}`);
   if (errors.length) throw Error(`browser errors: ${errors.join(' | ')}`);
-  console.log(JSON.stringify({ clickTurns: first.battle.turns, draggedTargetX: dragging.frame.target.x, joltTurns: interrupted.battle.turns, contactErrors: contacts, baoInventory, cakeCost: food.spentCoins, durianTurns: prank.turns, baoComfort: bao.battle.comfort, baoEnergy: bao.battle.energy, mobile, browserErrors: errors.length }, null, 2));
+  console.log(JSON.stringify({ castCount: castIds.length, clickTurns: first.battle.turns, draggedTargetX: dragging.frame.target.x, joltTurns: interrupted.battle.turns, contactErrors: contacts, baoInventory, cakeCost: food.spentCoins, durianTurns: prank.turns, baoComfort: bao.battle.comfort, baoEnergy: bao.battle.energy, mobile, browserErrors: errors.length }, null, 2));
   await browser.close();
 })().catch(error => { console.error(error); process.exitCode = 1; });

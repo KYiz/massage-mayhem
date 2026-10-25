@@ -26,7 +26,12 @@ export const items = [
 export const itemById = Object.fromEntries(items.map(item => [item.id, item]));
 export const castInventory = {
   charming_m: ['towel','oil','cake'],
+  charming_f: ['towel','oil','massage_cream','cake','milk_tea','feather'],
+  uncle: ['towel','oil','hot_stone','guasha','hammer','scrub'],
   aunt: ['towel','oil','cake','basin','milk_tea'],
+  gentle: ['towel','oil','massage_cream','hot_stone','guasha','footcare'],
+  power: ['towel','oil','hammer','basin','scrub','footcare'],
+  joker: ['towel','oil','slipper','glow_slipper','banana','feather','cake'],
   bao_master: items.map(item => item.id)
 };
 export const playableFor = (cast, scene) => items.filter(item => castInventory[cast]?.includes(item.id) && item.scenes.includes(scene));

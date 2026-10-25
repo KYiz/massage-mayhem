@@ -7,7 +7,8 @@ import { itemAvailability, itemTuning, performItem } from './item-rules.js';
 const $ = selector => document.querySelector(selector);
 const stage = $('#stage');
 const visual = new VisualStage(stage);
-const names = { charming_m: '阿烈', aunt: '芬姨', bao_master: '包师傅', back: '开背', legs: '压腿', feet: '足疗' };
+const names = { charming_m: '阿烈', charming_f: '小曼', uncle: '老冯', aunt: '芬姨', gentle: '岚姐', power: '阿虎', joker: '小周', bao_master: '包师傅', back: '开背', legs: '压腿', feet: '足疗' };
+const skills = { charming_m: '飞吻', charming_f: '爱心手势', uncle: '蓄力推拿', aunt: '递美食', gentle: '精准按压', power: '重压足疗', joker: '整蛊石化', bao_master: '黄金右手' };
 const phases = { approach: '入场 · 步态与转身', observe: '观察顾客 · 寻找接触点', prepare: '准备 · 转身和重心调整', precontact: '接触前 · 手掌悬停', contact: '接触 · 掌心落点', hold: '持续接触 · 跟随玩家', release: '松手 · 顾客停止持续反馈', recover: '回位 · 重找落点', toolTake: '拿取道具 · 握持切换', toolReturn: '工具归位', interrupted: '打断 · 躲避并重新观察', signaturePrep: '专属技能 · 准备', signatureCharge: '专属技能 · 蓄力', signaturePose: '专属技能 · 出手' };
 const labels = { comfort: '舒适', affection: '好感', patience: '耐心', complaint: '投诉', energy: '能量' };
 const levels = [{ level: 1, comfortGoal: 95, patience: 90, maxActions: 50, servicePool: ['gentle', 'strong', 'food', 'prank'], scenePool: ['back', 'legs', 'feet'] }];
@@ -20,6 +21,7 @@ function log(message) {
   $('#log').prepend(li);
   while ($('#log').children.length > 24) $('#log').lastElementChild.remove();
 }
+function feedback(message) { $('#feedback').textContent = message; }
 function point(event) {
   const rect = stage.getBoundingClientRect();
   return { x: (event.clientX - rect.left) * 960 / rect.width, y: (event.clientY - rect.top) * 540 / rect.height };
@@ -34,7 +36,7 @@ function renderInventory() {
   $('#inventory').innerHTML = `<div class="propgrid"><button data-id="hand" class="active">✋ 徒手</button></div>` + groups.map(group => {
     const groupItems = owned.filter(item => item.group === group);
     if (!groupItems.length) return '';
-    return `<div class="propgroup"><strong>${group}</strong><div class="propgrid">${groupItems.map(item => { const available = itemAvailability(battle, item.id, 999); const remaining = Math.max(0, itemTuning[item.id].stock - (battle.itemUses?.[item.id] || 0)); return `<button data-id="${item.id}" title="${item.gesture}｜${item.scenes.map(key => names[key]).join('、')}｜${available.reason || `本局剩余 ${remaining} 次`}" class="${item.scenes.includes(scene) ? '' : 'offscene'}" ${available.ok ? '' : 'disabled'}>${item.icon} ${item.name} <small>×${remaining}</small></button>`; }).join('')}</div></div>`;
+    return `<div class="propgroup"><strong>${group}</strong><div class="propgrid">${groupItems.map(item => { const available = itemAvailability(battle, item.id, 999); const remaining = Math.max(0, itemTuning[item.id].stock - (battle.itemUses?.[item.id] || 0)); return `<button data-id="${item.id}" title="${item.gesture}｜${item.scenes.map(key => names[key]).join('、')}｜${available.reason || `本局剩余 ${remaining} 次`}" class="${item.scenes.includes(scene) ? '' : 'offscene'}">${item.icon} ${item.name} <small>×${remaining}</small></button>`; }).join('')}</div></div>`;
   }).join('');
   selectGroup('tool', tool);
   $('#toolTip').textContent = tool === 'hand' ? '选择道具后，在虚线区域点击、长按或拖动。招待类的虚线热区会移到顾客面前。' : `${itemById[tool].name}：${itemById[tool].gesture}；适用${itemById[tool].scenes.map(key => names[key]).join('、')}。`;
@@ -47,7 +49,7 @@ function updateMetrics() {
     el.querySelector('output').textContent = battle[key];
     el.querySelector('label').textContent = label;
   }
-  $('#signature').disabled = director.phase !== 'observe' || battle.status !== 'playing' || director.toolHeld || (cast === 'bao_master' && scene !== 'feet');
+  $('#signature').textContent = `专属技能 · ${skills[cast]}（能量 ${battle.energy}）`;
 }
 function reset(clearLog = false) {
   if (pointerId !== null && stage.hasPointerCapture(pointerId)) stage.releasePointerCapture(pointerId);
@@ -63,10 +65,10 @@ function reset(clearLog = false) {
   tool = 'hand'; selectGroup('tool', tool);
   visual.setCast(cast, scene);
   renderInventory();
-  director.startApproach();
   $('#castTitle').textContent = `${names[cast]} · ${names[scene]}`;
   if (clearLog) $('#log').replaceChildren();
   log(`${names[cast]}进入${names[scene]}验证局；点击虚线区域开始。`);
+  feedback(`${names[cast]}已就位。点击画面虚线热区；道具会先拿取，再点击热区使用。`);
   updateMetrics();
 }
 function handleEvent(event) {
@@ -89,9 +91,9 @@ function handleEvent(event) {
     case 'skillImpact': {
       if (battle.status !== 'playing') break;
       const before = battle;
-      if (cast === 'aunt') battle = performService(battle, levels, 'food', 90, 999);
+      if (cast === 'aunt') battle = { ...performService(battle, levels, 'food', 90, 999), energy: 0 };
       else battle = useSkill(battle);
-      log(`#${event.interactionId} ${cast === 'aunt' ? '芬姨递美食' : cast === 'charming_m' ? '阿烈飞吻' : '包师傅黄金右手'}命中；舒适 ${battle.comfort - before.comfort >= 0 ? '+' : ''}${battle.comfort - before.comfort}，好感 ${battle.affection - before.affection >= 0 ? '+' : ''}${battle.affection - before.affection}。`);
+      log(`#${event.interactionId} ${names[cast]}${skills[cast]}命中；舒适 ${battle.comfort - before.comfort >= 0 ? '+' : ''}${battle.comfort - before.comfort}，好感 ${battle.affection - before.affection >= 0 ? '+' : ''}${battle.affection - before.affection}。`);
       updateMetrics();
       break;
     }
@@ -103,23 +105,37 @@ function handleEvent(event) {
 $('#metrics').innerHTML = Object.entries(labels).map(([key,label]) => `<div class="metric" data-key="${key}"><label>${label}</label><div class="track"><div class="fill"></div></div><output>0</output></div>`).join('');
 document.querySelectorAll('[data-group="cast"] button').forEach(button => button.addEventListener('click', () => { cast = button.dataset.id; selectGroup('cast', cast); reset(true); }));
 document.querySelectorAll('[data-group="scene"] button').forEach(button => button.addEventListener('click', () => { scene = button.dataset.id; selectGroup('scene', scene); reset(true); }));
-document.querySelectorAll('[data-group="service"] button').forEach(button => button.addEventListener('click', () => { if (director.setService(button.dataset.id)) { service = button.dataset.id; selectGroup('service', service); } }));
+document.querySelectorAll('[data-group="service"] button').forEach(button => button.addEventListener('click', () => { if (director.setService(button.dataset.id)) { service = button.dataset.id; selectGroup('service', service); feedback(`力度已切换为${button.textContent}；在虚线热区操作。`); } else feedback('动作进行中，请等技师回位后再切换力度。'); }));
 $('#inventory').addEventListener('click', event => {
   const button = event.target.closest('button[data-id]');
-  if (!button || button.disabled) return;
-  if (button.dataset.id !== 'hand' && !itemAvailability(battle, button.dataset.id, 999).ok) return;
+  if (!button) return;
+  if (director.phase !== 'observe') { feedback('技师正在动作中，请等回位后再选择道具。'); return; }
+  if (button.dataset.id !== 'hand') {
+    const availability = itemAvailability(battle, button.dataset.id, 999);
+    if (!availability.ok) { const item = itemById[button.dataset.id]; feedback(`${item.name}暂不可用：${availability.reason}${availability.reason === '此场景不可用' ? `；请切换到${item.scenes.map(key => names[key]).join('或')}` : ''}。`); return; }
+  }
   if (director.selectTool(button.dataset.id)) {
     tool = director.tool; selectGroup('tool', tool);
     $('#toolTip').textContent = director.phase === 'toolReturn' ? `${itemById[tool].name}正在归位。` : tool === 'hand' ? '徒手模式。' : `${itemById[tool].name}：${itemById[tool].gesture}；按提示虚线区域操作。`;
-  }
+    feedback(tool === 'hand' ? '已选择徒手。' : `${itemById[tool].name}拿取中，稍后点击虚线热区使用。`);
+  } else feedback('当前不能切换道具，请等待动作结束。');
 });
-$('#signature').addEventListener('click', () => { if (director.startSignature()) log('专属动作进入准备、蓄力、出手三段。'); });
-$('#jolt').addEventListener('click', () => director.interrupt('guest-jolt'));
+$('#signature').addEventListener('click', () => {
+  if (battle.status !== 'playing') return feedback('本局已结束，请点击“重置数值”。');
+  if (director.phase !== 'observe') return feedback('技师正在动作中，请等回位后使用技能。');
+  if (director.toolHeld) return feedback('请先点击“徒手”，放回道具后再使用技能。');
+  if (cast === 'bao_master' && scene !== 'feet') return feedback('黄金右手只能在足疗场景使用。');
+  if (battle.energy < 100) return feedback(`能量不足：还需 ${100 - battle.energy} 点。`);
+  if (director.startSignature()) { log(`${names[cast]}的${skills[cast]}进入准备、蓄力、出手三段。`); feedback(`${skills[cast]}发动中。`); }
+});
+$('#jolt').addEventListener('click', () => { if (director.interrupt('guest-jolt')) feedback('顾客突然乱动：技师闪避并重新观察。'); else feedback('技师已经在处理乱动，请稍候。'); });
 $('#reset').addEventListener('click', () => reset(true));
 document.addEventListener('keydown', event => { if (event.key.toLowerCase() === 'g') director.interrupt('guest-jolt'); });
 stage.addEventListener('pointerdown', event => {
-  if (pointerId !== null || battle.status !== 'playing') return;
-  if (director.pointerDown(point(event))) { pointerId = event.pointerId; stage.setPointerCapture(pointerId); event.preventDefault(); }
+  if (pointerId !== null) return;
+  if (battle.status !== 'playing') return feedback('本局已结束，请点击“重置数值”。');
+  if (director.pointerDown(point(event))) { pointerId = event.pointerId; stage.setPointerCapture(pointerId); feedback('已锁定接触点，技师正在准备动作。'); event.preventDefault(); }
+  else feedback(director.phase === 'observe' ? '请点击画面中的虚线热区；招待道具的热区在顾客面前。' : '动作尚未结束，请等技师回位后操作。');
 });
 stage.addEventListener('pointermove', event => { if (event.pointerId === pointerId) director.pointerMove(point(event), event.pressure || .5); });
 stage.addEventListener('pointerup', event => { if (event.pointerId === pointerId) { director.pointerUp(); pointerId = null; event.preventDefault(); } });
