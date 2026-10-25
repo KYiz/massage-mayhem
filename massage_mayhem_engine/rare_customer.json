@@ -1,0 +1,20 @@
+{
+  "id": "mystery_vip",
+  "name": "神秘挑剔客",
+  "unlockLevel": 8,
+  "cooldownLevels": 3,
+  "oncePerLevel": true,
+  "trigger": "完成普通顾客生成后，未进入终局时按章节概率替换；失败后仍进入冷却；最多每3关一次",
+  "telegraph": "门铃特殊声+金色剪影+短暂警示UI",
+  "difficultyModifier": {
+    "comfortGoal": 18,
+    "patience": -20,
+    "maxActions": -3
+  },
+  "reward": {
+    "coinsMultiplier": 2.5,
+    "uniqueToken": 1,
+    "cosmeticBadge": "神秘顾客徽章"
+  },
+  "avoid": "非强制；出现后可选接受高难委托或改做原顾客；禁止重复刷新刷奖励"
+}

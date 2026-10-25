@@ -1,0 +1,8 @@
+{
+  "name": "massage-mayhem-rules",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}

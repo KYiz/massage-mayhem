@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>疯狂按摩店 · 可玩关卡原型</title>
+  <style>
+    :root{font-family:system-ui,"Microsoft YaHei",sans-serif;color:#402e34;background:#f8eee7}
+    *{box-sizing:border-box}body{margin:0;padding:18px}main{max-width:1080px;margin:auto}
+    h1{margin:0}h2{margin:0 0 12px;font-size:1.2rem}.hint{color:#745f67;font-size:.9rem}
+    .grid{display:grid;grid-template-columns:minmax(290px,340px) 1fr;gap:16px}
+    section{background:#fff;border:2px solid #e8cec6;border-radius:18px;padding:18px;margin:14px 0;box-shadow:0 4px 0 #ead7ce}
+    button,select{font:inherit;min-height:44px;border-radius:10px;border:1px solid #bb9692;background:#ffe0c2;color:#402e34;padding:8px 12px;cursor:pointer}
+    button:hover:not(:disabled){background:#ffc896}button:disabled{opacity:.45;cursor:not-allowed}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.between{justify-content:space-between}
+    .profile{text-align:center;background:#fff1e8;padding:14px;border-radius:14px;min-height:144px;flex:1}.locked{filter:grayscale(1);opacity:.6}
+    .profile strong{display:block;font-size:1.2rem}.profile p{margin:6px 0;font-size:.85rem}.profile img{height:155px;max-width:100%;object-fit:contain;display:block;margin:auto}
+    select{width:100%;margin:6px 0}.meter{display:grid;grid-template-columns:82px 1fr 58px;align-items:center;gap:7px;margin:8px 0;font-size:.9rem}
+    .track{height:14px;background:#eadbd4;border-radius:8px;overflow:hidden}.fill{height:100%;background:#74aa8e}
+    #stage{height:330px;position:relative;border-radius:18px;background:linear-gradient(145deg,#f8d7bd,#daa7ab);overflow:hidden;touch-action:none;user-select:none}
+    #target{position:absolute;left:22%;top:23%;width:56%;height:55%;border:3px dashed #fff8db;border-radius:48%;display:flex;align-items:center;justify-content:center;color:#623e47;font-weight:700;background:#ffffff27}
+    #face{position:absolute;right:20px;top:13px;font-size:56px}#actor{position:absolute;left:8px;bottom:4px;font-size:62px}#actor img{height:125px;max-width:130px;object-fit:contain;display:block}
+    #stageNote{position:absolute;bottom:15px;right:15px;background:#fff9;padding:6px;border-radius:8px;font-size:.8rem}
+    #services button{margin:4px}.selected{outline:3px solid #b74c65;background:#ffbd9b}
+    #offerBox{border:2px solid #dcaa4c;background:#fff4cc;padding:12px;border-radius:12px;margin:12px 0}
+    #log{max-height:230px;overflow:auto;white-space:pre-line;font-size:.86rem;background:#fff8f4;padding:10px;border-radius:10px}
+    #result{font-weight:700;min-height:24px}#message{min-height:24px;color:#ad3f58;font-weight:700}
+    @media(max-width:760px){.grid{display:block}#stage{height:270px}body{padding:10px}}
+  </style>
+</head>
+<body>
+<main>
+  <h1>💆 疯狂按摩店</h1>
+  <p class="hint">可玩规则原型 · 选择服务后在虚线区域内滑动 · 进度自动保存在本机浏览器</p>
+  <div class="grid">
+    <div>
+      <section>
+        <h2>出战技师</h2>
+        <div class="row"><button id="prev" aria-label="上一位技师">❮</button><div id="profile" class="profile"></div><button id="next" aria-label="下一位技师">❯</button></div>
+        <p id="balance"></p><button id="unlock"></button>
+      </section>
+      <section>
+        <h2>接单</h2>
+        <label for="level">关卡</label><select id="level"></select>
+        <p id="description" class="hint"></p><button id="start">开始接单</button>
+        <div id="offerBox" hidden><p id="offerText"></p><button id="accept">接受神秘客</button><button id="decline">维持普通订单</button></div>
+      </section>
+    </div>
+    <div>
+      <section>
+        <div class="row between"><h2 id="battleTitle">等待接单</h2><span id="turns"></span></div>
+        <div id="meters"></div><p id="result"></p>
+        <div id="stage" aria-label="按摩操作区域"><div id="target">在这里滑动</div><div id="face">😐</div><div id="actor">🧑‍⚕️</div><div id="stageNote">选择服务后拖动</div></div>
+        <p id="message"></p><div id="services"></div>
+        <div class="row"><button id="skill">⚡释放技能</button><button id="appeal">📋申诉</button></div>
+        <p class="hint">操作质量由落点、滑动距离和时长计算；测试时也可点击“键盘操作”以质量 70 执行。</p>
+        <button id="keyboardAction">键盘操作</button>
+      </section>
+      <section><h2>本局战报</h2><div id="log"></div></section>
+    </div>
+  </div>
+</main>
+<script type="module" src="./campaign.js"></script>
+</body>
+</html>

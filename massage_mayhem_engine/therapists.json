@@ -1,0 +1,166 @@
+[
+  {
+    "id": "charming_m",
+    "name": "阿烈｜痞帅男模",
+    "gender": "男",
+    "skills": {
+      "gentle": 55,
+      "strong": 48,
+      "food": 48,
+      "dance": 96,
+      "prank": 55
+    },
+    "charm": 94,
+    "trait": "魅力互动/热舞",
+    "cost": 0,
+    "appearance": "微卷狼尾、单边耳钉、半开领黑衬衫、修身西裤；歪嘴坏笑与挑眉",
+    "palette": "黑/酒红/紫",
+    "animationSet": "飞吻、近距离舞步、被拒时秒变无辜",
+    "silhouette": "狼尾耳钉+单手插袋站姿",
+    "matchNotes": "偏爱其风格的爱玩顾客；不擅长保守社恐客"
+  },
+  {
+    "id": "charming_f",
+    "name": "小曼｜甜辣头牌",
+    "gender": "女",
+    "skills": {
+      "gentle": 78,
+      "strong": 35,
+      "food": 62,
+      "dance": 94,
+      "prank": 45
+    },
+    "charm": 94,
+    "trait": "温柔护理/飞吻/表演",
+    "cost": 0,
+    "appearance": "高马尾或长卷发、眼尾上挑、修身制服与可解锁黑丝袜装扮",
+    "palette": "黑/粉/金",
+    "animationSet": "职业甜笑、心形特效、被投诉时冷脸",
+    "silhouette": "高马尾+独特手套和星星发夹",
+    "matchNotes": "偏爱魅力服务的客人；遇到保守客可能失配"
+  },
+  {
+    "id": "uncle",
+    "name": "老冯｜铁掌推拿大叔",
+    "gender": "男",
+    "skills": {
+      "gentle": 70,
+      "strong": 93,
+      "food": 50,
+      "dance": 20,
+      "prank": 55
+    },
+    "charm": 40,
+    "trait": "强力推拿/压腿",
+    "cost": 230,
+    "appearance": "浓眉、寸头、宽肩、旧白背心、腰间旧毛巾、粗壮手掌",
+    "palette": "灰白/深蓝/褐",
+    "animationSet": "蓄力拍背、鼻孔喷气、无语脸",
+    "silhouette": "斜挎旧毛巾+硕大方形手掌",
+    "matchNotes": "大力偏好顾客；轻柔敏感型易失误"
+  },
+  {
+    "id": "aunt",
+    "name": "芬姨｜暖心嘴碎大妈",
+    "gender": "女",
+    "skills": {
+      "gentle": 85,
+      "strong": 60,
+      "food": 98,
+      "dance": 22,
+      "prank": 53
+    },
+    "charm": 41,
+    "trait": "足浴/美食/安抚",
+    "cost": 230,
+    "appearance": "短卷发、花纹围裙、圆润轮廓、肩搭纯棉旧毛巾",
+    "palette": "橙/绿/米黄",
+    "animationSet": "唠嗑、翻白眼、招呼吃东西",
+    "silhouette": "大花围裙+快速摆手说话动作",
+    "matchNotes": "吃货与家庭感偏好顾客；讨厌唠叨者减益"
+  },
+  {
+    "id": "gentle",
+    "name": "岚姐｜冷艳王牌",
+    "gender": "女",
+    "skills": {
+      "gentle": 96,
+      "strong": 73,
+      "food": 45,
+      "dance": 42,
+      "prank": 23
+    },
+    "charm": 68,
+    "trait": "精准轻重控制/复杂顾客",
+    "cost": 180,
+    "appearance": "利落深色短发、细框眼镜、利落制服、笔直站姿",
+    "palette": "黑/酒红/深灰",
+    "animationSet": "推眼镜、精准压点、冷眼一扫",
+    "silhouette": "细框眼镜+锐角制服肩线",
+    "matchNotes": "苛刻客与轻柔客；爱闹顾客可能嫌沉闷"
+  },
+  {
+    "id": "power",
+    "name": "阿虎｜肌肉狼狗",
+    "gender": "男",
+    "skills": {
+      "gentle": 35,
+      "strong": 99,
+      "food": 35,
+      "dance": 40,
+      "prank": 72
+    },
+    "charm": 52,
+    "trait": "重压足疗/压腿",
+    "cost": 180,
+    "appearance": "方正轮廓、短寸、宽背、蓝色运动背心、护腕",
+    "palette": "蓝/白/橙",
+    "animationSet": "蓄力憨笑、失误后手忙脚乱",
+    "silhouette": "大护腕+倒三角肌肉轮廓",
+    "matchNotes": "吃力客；怕痛型失配严重"
+  },
+  {
+    "id": "joker",
+    "name": "小周｜憨萌学徒",
+    "gender": "男",
+    "skills": {
+      "gentle": 52,
+      "strong": 53,
+      "food": 50,
+      "dance": 61,
+      "prank": 97
+    },
+    "charm": 56,
+    "trait": "整蛊/学习成长",
+    "cost": 280,
+    "appearance": "蘑菇短发、偏大工作服、胸袋小抄、站姿拘谨",
+    "palette": "浅蓝/卡其/白",
+    "animationSet": "紧张流汗、误操作石化、成功比耶",
+    "silhouette": "大号工服+胸袋小抄",
+    "matchNotes": "爱玩与宽容顾客；挑剔客易翻车"
+  },
+  {
+    "id": "bao_master",
+    "name": "包师傅｜黄金右手",
+    "gender": "男",
+    "skills": {
+      "gentle": 55,
+      "strong": 99,
+      "food": 45,
+      "dance": 20,
+      "prank": 65
+    },
+    "charm": 50,
+    "trait": "足疗重按／黄金右手：高舒适、高投诉风险",
+    "cost": 12800,
+    "hidden": true,
+    "revealAfterLevel": 30,
+    "signatureSkillId": "golden_right_hand",
+    "portrait": "../art/characters/bao_master_portrait.png",
+    "appearance": "壮硕中年技师，短寸与胡茬，米白色工作衫、深色工装裤，腰间白毛巾，右手有夸张暖金高光",
+    "palette": "米白／深灰／暖金",
+    "animationSet": "活动右手、擦毛巾、卸表蓄力、黄金右手足底按压",
+    "silhouette": "宽肩、腰间毛巾、放大的右手",
+    "matchNotes": "足疗和喜欢重按的顾客效率高；轻柔顾客与非足疗场景优势有限"
+  }
+]
