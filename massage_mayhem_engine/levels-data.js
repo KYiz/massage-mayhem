@@ -1,0 +1,986 @@
+export default [
+  {
+    "level": 1,
+    "chapter": "新手实习期",
+    "difficulty": 1,
+    "guestPool": [
+      "foodie",
+      "gentle"
+    ],
+    "scenePool": [
+      "back"
+    ],
+    "servicePool": [
+      "gentle",
+      "food"
+    ],
+    "events": [
+      "普通好感",
+      "轻柔服务"
+    ],
+    "rareChance": 0,
+    "comfortGoal": 40,
+    "patience": 90,
+    "maxActions": 23,
+    "baseCoins": 82,
+    "unlockMechanic": "滑动轻柔"
+  },
+  {
+    "level": 2,
+    "chapter": "新手实习期",
+    "difficulty": 1,
+    "guestPool": [
+      "foodie",
+      "gentle"
+    ],
+    "scenePool": [
+      "back"
+    ],
+    "servicePool": [
+      "gentle",
+      "food"
+    ],
+    "events": [
+      "普通好感",
+      "轻柔服务"
+    ],
+    "rareChance": 0,
+    "comfortGoal": 42,
+    "patience": 89,
+    "maxActions": 23,
+    "baseCoins": 94,
+    "unlockMechanic": "观察表情"
+  },
+  {
+    "level": 3,
+    "chapter": "新手实习期",
+    "difficulty": 1,
+    "guestPool": [
+      "foodie",
+      "gentle"
+    ],
+    "scenePool": [
+      "back"
+    ],
+    "servicePool": [
+      "gentle",
+      "food"
+    ],
+    "events": [
+      "普通好感",
+      "轻柔服务"
+    ],
+    "rareChance": 0,
+    "comfortGoal": 44,
+    "patience": 88,
+    "maxActions": 23,
+    "baseCoins": 106,
+    "unlockMechanic": "食品招待"
+  },
+  {
+    "level": 4,
+    "chapter": "新手实习期",
+    "difficulty": 1,
+    "guestPool": [
+      "foodie",
+      "gentle"
+    ],
+    "scenePool": [
+      "back"
+    ],
+    "servicePool": [
+      "gentle",
+      "food"
+    ],
+    "events": [
+      "普通好感",
+      "轻柔服务"
+    ],
+    "rareChance": 0,
+    "comfortGoal": 46,
+    "patience": 87,
+    "maxActions": 23,
+    "baseCoins": 118,
+    "unlockMechanic": "偏好提示"
+  },
+  {
+    "level": 5,
+    "chapter": "新手实习期",
+    "difficulty": 1,
+    "guestPool": [
+      "foodie",
+      "gentle"
+    ],
+    "scenePool": [
+      "back"
+    ],
+    "servicePool": [
+      "gentle",
+      "food"
+    ],
+    "events": [
+      "普通好感",
+      "轻柔服务"
+    ],
+    "rareChance": 0,
+    "comfortGoal": 48,
+    "patience": 86,
+    "maxActions": 23,
+    "baseCoins": 130,
+    "unlockMechanic": "技师适配"
+  },
+  {
+    "level": 6,
+    "chapter": "新手实习期",
+    "difficulty": 1,
+    "guestPool": [
+      "foodie",
+      "gentle"
+    ],
+    "scenePool": [
+      "back"
+    ],
+    "servicePool": [
+      "gentle",
+      "food"
+    ],
+    "events": [
+      "普通好感",
+      "轻柔服务"
+    ],
+    "rareChance": 0,
+    "comfortGoal": 50,
+    "patience": 85,
+    "maxActions": 23,
+    "baseCoins": 142,
+    "unlockMechanic": "技能连击"
+  },
+  {
+    "level": 7,
+    "chapter": "手艺进阶期",
+    "difficulty": 2,
+    "guestPool": [
+      "foodie",
+      "gentle",
+      "strong",
+      "goofy"
+    ],
+    "scenePool": [
+      "back",
+      "feet"
+    ],
+    "servicePool": [
+      "gentle",
+      "strong",
+      "food",
+      "prank"
+    ],
+    "events": [
+      "偏好冲突",
+      "轻度整蛊"
+    ],
+    "rareChance": 0.08,
+    "comfortGoal": 49,
+    "patience": 80,
+    "maxActions": 21,
+    "baseCoins": 154,
+    "unlockMechanic": "大力按摩"
+  },
+  {
+    "level": 8,
+    "chapter": "手艺进阶期",
+    "difficulty": 2,
+    "guestPool": [
+      "foodie",
+      "gentle",
+      "strong",
+      "goofy"
+    ],
+    "scenePool": [
+      "back",
+      "feet"
+    ],
+    "servicePool": [
+      "gentle",
+      "strong",
+      "food",
+      "prank"
+    ],
+    "events": [
+      "偏好冲突",
+      "轻度整蛊"
+    ],
+    "rareChance": 0.08,
+    "comfortGoal": 51,
+    "patience": 79,
+    "maxActions": 21,
+    "baseCoins": 166,
+    "unlockMechanic": ""
+  },
+  {
+    "level": 9,
+    "chapter": "手艺进阶期",
+    "difficulty": 2,
+    "guestPool": [
+      "foodie",
+      "gentle",
+      "strong",
+      "goofy"
+    ],
+    "scenePool": [
+      "back",
+      "feet"
+    ],
+    "servicePool": [
+      "gentle",
+      "strong",
+      "food",
+      "prank"
+    ],
+    "events": [
+      "偏好冲突",
+      "轻度整蛊"
+    ],
+    "rareChance": 0.08,
+    "comfortGoal": 53,
+    "patience": 78,
+    "maxActions": 21,
+    "baseCoins": 178,
+    "unlockMechanic": "足浴新场景"
+  },
+  {
+    "level": 10,
+    "chapter": "手艺进阶期",
+    "difficulty": 2,
+    "guestPool": [
+      "foodie",
+      "gentle",
+      "strong",
+      "goofy"
+    ],
+    "scenePool": [
+      "back",
+      "feet"
+    ],
+    "servicePool": [
+      "gentle",
+      "strong",
+      "food",
+      "prank"
+    ],
+    "events": [
+      "偏好冲突",
+      "轻度整蛊"
+    ],
+    "rareChance": 0.08,
+    "comfortGoal": 55,
+    "patience": 77,
+    "maxActions": 21,
+    "baseCoins": 190,
+    "unlockMechanic": ""
+  },
+  {
+    "level": 11,
+    "chapter": "手艺进阶期",
+    "difficulty": 2,
+    "guestPool": [
+      "foodie",
+      "gentle",
+      "strong",
+      "goofy"
+    ],
+    "scenePool": [
+      "back",
+      "feet"
+    ],
+    "servicePool": [
+      "gentle",
+      "strong",
+      "food",
+      "prank"
+    ],
+    "events": [
+      "偏好冲突",
+      "轻度整蛊"
+    ],
+    "rareChance": 0.08,
+    "comfortGoal": 57,
+    "patience": 76,
+    "maxActions": 21,
+    "baseCoins": 202,
+    "unlockMechanic": "整蛊"
+  },
+  {
+    "level": 12,
+    "chapter": "手艺进阶期",
+    "difficulty": 2,
+    "guestPool": [
+      "foodie",
+      "gentle",
+      "strong",
+      "goofy"
+    ],
+    "scenePool": [
+      "back",
+      "feet"
+    ],
+    "servicePool": [
+      "gentle",
+      "strong",
+      "food",
+      "prank"
+    ],
+    "events": [
+      "偏好冲突",
+      "轻度整蛊"
+    ],
+    "rareChance": 0.08,
+    "comfortGoal": 59,
+    "patience": 75,
+    "maxActions": 21,
+    "baseCoins": 214,
+    "unlockMechanic": ""
+  },
+  {
+    "level": 13,
+    "chapter": "奇葩顾客期",
+    "difficulty": 3,
+    "guestPool": [
+      "foodie",
+      "gentle",
+      "strong",
+      "goofy",
+      "tricky"
+    ],
+    "scenePool": [
+      "back",
+      "feet",
+      "legs"
+    ],
+    "servicePool": [
+      "gentle",
+      "strong",
+      "food",
+      "prank",
+      "dance"
+    ],
+    "events": [
+      "双标签偏好",
+      "顾客乱动",
+      "申诉"
+    ],
+    "rareChance": 0.12,
+    "comfortGoal": 58,
+    "patience": 70,
+    "maxActions": 19,
+    "baseCoins": 226,
+    "unlockMechanic": "双偏好"
+  },
+  {
+    "level": 14,
+    "chapter": "奇葩顾客期",
+    "difficulty": 3,
+    "guestPool": [
+      "foodie",
+      "gentle",
+      "strong",
+      "goofy",
+      "tricky"
+    ],
+    "scenePool": [
+      "back",
+      "feet",
+      "legs"
+    ],
+    "servicePool": [
+      "gentle",
+      "strong",
+      "food",
+      "prank",
+      "dance"
+    ],
+    "events": [
+      "双标签偏好",
+      "顾客乱动",
+      "申诉"
+    ],
+    "rareChance": 0.12,
+    "comfortGoal": 60,
+    "patience": 69,
+    "maxActions": 19,
+    "baseCoins": 238,
+    "unlockMechanic": ""
+  },
+  {
+    "level": 15,
+    "chapter": "奇葩顾客期",
+    "difficulty": 3,
+    "guestPool": [
+      "foodie",
+      "gentle",
+      "strong",
+      "goofy",
+      "tricky"
+    ],
+    "scenePool": [
+      "back",
+      "feet",
+      "legs"
+    ],
+    "servicePool": [
+      "gentle",
+      "strong",
+      "food",
+      "prank",
+      "dance"
+    ],
+    "events": [
+      "双标签偏好",
+      "顾客乱动",
+      "申诉"
+    ],
+    "rareChance": 0.12,
+    "comfortGoal": 62,
+    "patience": 68,
+    "maxActions": 19,
+    "baseCoins": 250,
+    "unlockMechanic": "仰卧压腿"
+  },
+  {
+    "level": 16,
+    "chapter": "奇葩顾客期",
+    "difficulty": 3,
+    "guestPool": [
+      "foodie",
+      "gentle",
+      "strong",
+      "goofy",
+      "tricky"
+    ],
+    "scenePool": [
+      "back",
+      "feet",
+      "legs"
+    ],
+    "servicePool": [
+      "gentle",
+      "strong",
+      "food",
+      "prank",
+      "dance"
+    ],
+    "events": [
+      "双标签偏好",
+      "顾客乱动",
+      "申诉"
+    ],
+    "rareChance": 0.12,
+    "comfortGoal": 64,
+    "patience": 67,
+    "maxActions": 19,
+    "baseCoins": 262,
+    "unlockMechanic": ""
+  },
+  {
+    "level": 17,
+    "chapter": "奇葩顾客期",
+    "difficulty": 3,
+    "guestPool": [
+      "foodie",
+      "gentle",
+      "strong",
+      "goofy",
+      "tricky"
+    ],
+    "scenePool": [
+      "back",
+      "feet",
+      "legs"
+    ],
+    "servicePool": [
+      "gentle",
+      "strong",
+      "food",
+      "prank",
+      "dance"
+    ],
+    "events": [
+      "双标签偏好",
+      "顾客乱动",
+      "申诉"
+    ],
+    "rareChance": 0.12,
+    "comfortGoal": 66,
+    "patience": 66,
+    "maxActions": 19,
+    "baseCoins": 274,
+    "unlockMechanic": "投诉申诉"
+  },
+  {
+    "level": 18,
+    "chapter": "奇葩顾客期",
+    "difficulty": 3,
+    "guestPool": [
+      "foodie",
+      "gentle",
+      "strong",
+      "goofy",
+      "tricky"
+    ],
+    "scenePool": [
+      "back",
+      "feet",
+      "legs"
+    ],
+    "servicePool": [
+      "gentle",
+      "strong",
+      "food",
+      "prank",
+      "dance"
+    ],
+    "events": [
+      "双标签偏好",
+      "顾客乱动",
+      "申诉"
+    ],
+    "rareChance": 0.12,
+    "comfortGoal": 68,
+    "patience": 65,
+    "maxActions": 19,
+    "baseCoins": 286,
+    "unlockMechanic": ""
+  },
+  {
+    "level": 19,
+    "chapter": "高级服务期",
+    "difficulty": 4,
+    "guestPool": [
+      "foodie",
+      "gentle",
+      "strong",
+      "goofy",
+      "tricky",
+      "flirt"
+    ],
+    "scenePool": [
+      "back",
+      "feet",
+      "legs"
+    ],
+    "servicePool": [
+      "gentle",
+      "strong",
+      "food",
+      "prank",
+      "dance"
+    ],
+    "events": [
+      "特殊互动",
+      "投诉风险",
+      "查房预告"
+    ],
+    "rareChance": 0.16,
+    "comfortGoal": 67,
+    "patience": 60,
+    "maxActions": 17,
+    "baseCoins": 298,
+    "unlockMechanic": "特殊表演"
+  },
+  {
+    "level": 20,
+    "chapter": "高级服务期",
+    "difficulty": 4,
+    "guestPool": [
+      "foodie",
+      "gentle",
+      "strong",
+      "goofy",
+      "tricky",
+      "flirt"
+    ],
+    "scenePool": [
+      "back",
+      "feet",
+      "legs"
+    ],
+    "servicePool": [
+      "gentle",
+      "strong",
+      "food",
+      "prank",
+      "dance"
+    ],
+    "events": [
+      "特殊互动",
+      "投诉风险",
+      "查房预告"
+    ],
+    "rareChance": 0.16,
+    "comfortGoal": 69,
+    "patience": 59,
+    "maxActions": 17,
+    "baseCoins": 310,
+    "unlockMechanic": ""
+  },
+  {
+    "level": 21,
+    "chapter": "高级服务期",
+    "difficulty": 4,
+    "guestPool": [
+      "foodie",
+      "gentle",
+      "strong",
+      "goofy",
+      "tricky",
+      "flirt"
+    ],
+    "scenePool": [
+      "back",
+      "feet",
+      "legs"
+    ],
+    "servicePool": [
+      "gentle",
+      "strong",
+      "food",
+      "prank",
+      "dance"
+    ],
+    "events": [
+      "特殊互动",
+      "投诉风险",
+      "查房预告"
+    ],
+    "rareChance": 0.16,
+    "comfortGoal": 71,
+    "patience": 58,
+    "maxActions": 17,
+    "baseCoins": 322,
+    "unlockMechanic": "查房风险"
+  },
+  {
+    "level": 22,
+    "chapter": "高级服务期",
+    "difficulty": 4,
+    "guestPool": [
+      "foodie",
+      "gentle",
+      "strong",
+      "goofy",
+      "tricky",
+      "flirt"
+    ],
+    "scenePool": [
+      "back",
+      "feet",
+      "legs"
+    ],
+    "servicePool": [
+      "gentle",
+      "strong",
+      "food",
+      "prank",
+      "dance"
+    ],
+    "events": [
+      "特殊互动",
+      "投诉风险",
+      "查房预告"
+    ],
+    "rareChance": 0.16,
+    "comfortGoal": 73,
+    "patience": 57,
+    "maxActions": 17,
+    "baseCoins": 334,
+    "unlockMechanic": ""
+  },
+  {
+    "level": 23,
+    "chapter": "高级服务期",
+    "difficulty": 4,
+    "guestPool": [
+      "foodie",
+      "gentle",
+      "strong",
+      "goofy",
+      "tricky",
+      "flirt"
+    ],
+    "scenePool": [
+      "back",
+      "feet",
+      "legs"
+    ],
+    "servicePool": [
+      "gentle",
+      "strong",
+      "food",
+      "prank",
+      "dance"
+    ],
+    "events": [
+      "特殊互动",
+      "投诉风险",
+      "查房预告"
+    ],
+    "rareChance": 0.16,
+    "comfortGoal": 75,
+    "patience": 56,
+    "maxActions": 17,
+    "baseCoins": 346,
+    "unlockMechanic": ""
+  },
+  {
+    "level": 24,
+    "chapter": "高级服务期",
+    "difficulty": 4,
+    "guestPool": [
+      "foodie",
+      "gentle",
+      "strong",
+      "goofy",
+      "tricky",
+      "flirt"
+    ],
+    "scenePool": [
+      "back",
+      "feet",
+      "legs"
+    ],
+    "servicePool": [
+      "gentle",
+      "strong",
+      "food",
+      "prank",
+      "dance"
+    ],
+    "events": [
+      "特殊互动",
+      "投诉风险",
+      "查房预告"
+    ],
+    "rareChance": 0.16,
+    "comfortGoal": 77,
+    "patience": 55,
+    "maxActions": 17,
+    "baseCoins": 358,
+    "unlockMechanic": ""
+  },
+  {
+    "level": 25,
+    "chapter": "传奇挑战期",
+    "difficulty": 5,
+    "guestPool": [
+      "foodie",
+      "gentle",
+      "strong",
+      "goofy",
+      "tricky",
+      "flirt"
+    ],
+    "scenePool": [
+      "back",
+      "feet",
+      "legs"
+    ],
+    "servicePool": [
+      "gentle",
+      "strong",
+      "food",
+      "prank",
+      "dance"
+    ],
+    "events": [
+      "三标签复合",
+      "隐藏事件",
+      "风险连锁"
+    ],
+    "rareChance": 0.2,
+    "comfortGoal": 76,
+    "patience": 50,
+    "maxActions": 15,
+    "baseCoins": 370,
+    "unlockMechanic": "三偏好"
+  },
+  {
+    "level": 26,
+    "chapter": "传奇挑战期",
+    "difficulty": 5,
+    "guestPool": [
+      "foodie",
+      "gentle",
+      "strong",
+      "goofy",
+      "tricky",
+      "flirt"
+    ],
+    "scenePool": [
+      "back",
+      "feet",
+      "legs"
+    ],
+    "servicePool": [
+      "gentle",
+      "strong",
+      "food",
+      "prank",
+      "dance"
+    ],
+    "events": [
+      "三标签复合",
+      "隐藏事件",
+      "风险连锁"
+    ],
+    "rareChance": 0.2,
+    "comfortGoal": 78,
+    "patience": 49,
+    "maxActions": 15,
+    "baseCoins": 382,
+    "unlockMechanic": ""
+  },
+  {
+    "level": 27,
+    "chapter": "传奇挑战期",
+    "difficulty": 5,
+    "guestPool": [
+      "foodie",
+      "gentle",
+      "strong",
+      "goofy",
+      "tricky",
+      "flirt"
+    ],
+    "scenePool": [
+      "back",
+      "feet",
+      "legs"
+    ],
+    "servicePool": [
+      "gentle",
+      "strong",
+      "food",
+      "prank",
+      "dance"
+    ],
+    "events": [
+      "三标签复合",
+      "隐藏事件",
+      "风险连锁"
+    ],
+    "rareChance": 0.2,
+    "comfortGoal": 80,
+    "patience": 48,
+    "maxActions": 15,
+    "baseCoins": 394,
+    "unlockMechanic": ""
+  },
+  {
+    "level": 28,
+    "chapter": "传奇挑战期",
+    "difficulty": 5,
+    "guestPool": [
+      "foodie",
+      "gentle",
+      "strong",
+      "goofy",
+      "tricky",
+      "flirt"
+    ],
+    "scenePool": [
+      "back",
+      "feet",
+      "legs"
+    ],
+    "servicePool": [
+      "gentle",
+      "strong",
+      "food",
+      "prank",
+      "dance"
+    ],
+    "events": [
+      "三标签复合",
+      "隐藏事件",
+      "风险连锁"
+    ],
+    "rareChance": 0.2,
+    "comfortGoal": 82,
+    "patience": 47,
+    "maxActions": 15,
+    "baseCoins": 406,
+    "unlockMechanic": "罕见事件联动"
+  },
+  {
+    "level": 29,
+    "chapter": "传奇挑战期",
+    "difficulty": 5,
+    "guestPool": [
+      "foodie",
+      "gentle",
+      "strong",
+      "goofy",
+      "tricky",
+      "flirt"
+    ],
+    "scenePool": [
+      "back",
+      "feet",
+      "legs"
+    ],
+    "servicePool": [
+      "gentle",
+      "strong",
+      "food",
+      "prank",
+      "dance"
+    ],
+    "events": [
+      "三标签复合",
+      "隐藏事件",
+      "风险连锁"
+    ],
+    "rareChance": 0.2,
+    "comfortGoal": 84,
+    "patience": 46,
+    "maxActions": 15,
+    "baseCoins": 418,
+    "unlockMechanic": ""
+  },
+  {
+    "level": 30,
+    "chapter": "传奇挑战期",
+    "difficulty": 5,
+    "guestPool": [
+      "foodie",
+      "gentle",
+      "strong",
+      "goofy",
+      "tricky",
+      "flirt"
+    ],
+    "scenePool": [
+      "back",
+      "feet",
+      "legs"
+    ],
+    "servicePool": [
+      "gentle",
+      "strong",
+      "food",
+      "prank",
+      "dance"
+    ],
+    "events": [
+      "三标签复合",
+      "隐藏事件",
+      "风险连锁"
+    ],
+    "rareChance": 0.2,
+    "comfortGoal": 86,
+    "patience": 45,
+    "maxActions": 15,
+    "baseCoins": 430,
+    "unlockMechanic": ""
+  }
+];

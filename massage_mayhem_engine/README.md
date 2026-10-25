@@ -2,14 +2,14 @@
 
 ## 运行
 
-需要 Python 3 和现代浏览器：
+现在可直接打开 [`play.html`](play.html)；页面使用预生成的 `play-bundle.js`，普通 Chrome 的 `file://` 打开方式已验证。也可以从本目录启动本地服务：
 
 ```bash
 cd massage_mayhem_engine
 python -m http.server 8000
 ```
 
-打开 **http://localhost:8000/play.html**。不能直接双击 HTML，因为浏览器会限制本地 ES Modules。`index.html` 和 `campaign.html` 保留为旧版独立调试原型。
+打开 **http://localhost:8000/play.html**。修改 `campaign.js`、规则或道具源文件后，在仓库根目录运行 `node build-standalone.cjs` 重新生成本地可直接打开的脚本。`index.html` 和 `campaign.html` 保留为旧版独立调试原型。
 
 ## 自动检查
 

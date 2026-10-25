@@ -2,6 +2,7 @@ import { guests, therapists } from './engine.js';
 import { castInventory, itemById, items } from './item-catalog.js';
 import { itemAvailability, itemTuning, performItem } from './item-rules.js';
 import { heldItemSvg } from './item-art.js';
+import levels from './levels-data.js';
 import {
   SAVE_VERSION, initialProgress, validateLevels, canUseTherapist, unlockTherapist,
   visibleTherapists, therapistUnlockStatus,
@@ -11,10 +12,6 @@ import {
 
 const STORAGE_KEY = 'massage-mayhem-save-v2';
 const $ = id => document.getElementById(id);
-const levels = await fetch('./levels.json').then(r => {
-  if (!r.ok) throw Error('无法加载关卡配置');
-  return r.json();
-});
 validateLevels(levels);
 
 function loadSession() {

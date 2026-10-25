@@ -1,6 +1,6 @@
 # 动画体验导演样机｜第一批
 
-入口：[index.html](index.html)。建议从仓库根目录执行 `python -m http.server 8000`，打开 `http://localhost:8000/animation-experience/`；Chrome 直接打开本地文件也可运行（需允许本地 ES module 文件读取）。这是独立导演验证局，不写入正式游戏存档。
+入口：[index.html](index.html)。页面使用预生成的 `animation-bundle.js`，可在普通 Chrome 中直接双击本地文件打开，无需本地服务或额外浏览器开关。修改源文件后，在仓库根目录运行 `node build-standalone.cjs` 重新生成脚本。这是独立导演验证局，不写入正式游戏存档。
 
 ## 操作
 

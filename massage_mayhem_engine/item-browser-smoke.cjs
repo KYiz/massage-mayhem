@@ -11,7 +11,7 @@ catch { ({ chromium } = require(path.join(process.env.USERPROFILE || '', '.cache
   const progress = { ...rules.initialProgress(), coins: 20000, unlockedLevel: 30, completed: [30], unlockedTherapists: ['charming_m','bao_master'] };
   const battle = rules.beginBattle({ id:'item-browser-qa', level:30, therapistId:'bao_master', guestId:'foodie', scene:'feet', rareOffered:false }, levels);
   const chrome = process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-  const browser = await chromium.launch({ headless:true, ...(fs.existsSync(chrome) ? { executablePath:chrome } : {}), args:['--allow-file-access-from-files'] });
+  const browser = await chromium.launch({ headless:true, ...(fs.existsSync(chrome) ? { executablePath:chrome } : {}), args:process.env.NO_FILE_FLAG ? [] : ['--allow-file-access-from-files'] });
   const page = await browser.newPage({ viewport:{ width:1366, height:900 } });
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   await page.addInitScript(data => localStorage.setItem('massage-mayhem-save-v2', JSON.stringify(data)), { progress, battle, offer:null });
