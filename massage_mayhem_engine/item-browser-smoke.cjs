@@ -25,7 +25,16 @@ catch { ({ chromium } = require(path.join(process.env.USERPROFILE || '', '.cache
   const state = await page.evaluate(() => JSON.parse(localStorage.getItem('massage-mayhem-save-v2')));
   if (state.battle.itemUses?.salt !== 1 || state.battle.turns !== 1) throw Error('Campaign item action did not persist');
   if (!(await page.locator('#items button[data-item="salt"]').isDisabled())) throw Error('Cooldown not reflected in campaign UI');
+  const starter = await browser.newPage({ viewport:{ width:1366, height:900 } });
+  const starterProgress = rules.initialProgress();
+  const starterBattle = rules.beginBattle({ id:'starter-items-qa', level:1, therapistId:'charming_m', guestId:'foodie', scene:'back', rareOffered:false }, levels);
+  await starter.addInitScript(data => localStorage.setItem('massage-mayhem-save-v2', JSON.stringify(data)), { progress:starterProgress, battle:starterBattle, offer:null });
+  await starter.goto(pathToFileURL(path.join(__dirname, 'play.html')).href);
+  const cake = starter.locator('#items button[data-item="cake"]');
+  if (!(await cake.textContent()).includes('第 3 关开放')) throw Error('starter item milestone is not visible');
+  await cake.click({ force:true });
+  if (!(await starter.locator('#message').textContent()).includes('第 3 关开放')) throw Error('locked item click gave no explanation');
   if (errors.length) throw Error(errors.join(' | '));
-  console.log(JSON.stringify({ availableItems:count, saltUses:state.battle.itemUses.salt, turns:state.battle.turns, campaignPageErrors:errors.length }, null, 2));
+  console.log(JSON.stringify({ availableItems:count, starterCakeUnlock:3, saltUses:state.battle.itemUses.salt, turns:state.battle.turns, campaignPageErrors:errors.length }, null, 2));
   await browser.close();
 })().catch(error => { console.error(error); process.exitCode = 1; });

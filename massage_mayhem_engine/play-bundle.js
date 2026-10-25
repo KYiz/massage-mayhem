@@ -81,9 +81,9 @@ function render() {
   $('items').innerHTML = b ? items.filter(item => castInventory[b.therapistId]?.includes(item.id)).map(item => {
     const state = itemAvailability(b, item.id, p.coins);
     const left = Math.max(0, itemTuning[item.id].stock - (b.itemUses?.[item.id] || 0));
-    return `<button data-item="${item.id}" class="${selectedItem === item.id ? 'selected' : ''}" ${state.ok ? '' : 'disabled'} title="${state.reason || item.gesture}"><svg viewBox="0 0 70 70" aria-hidden="true">${heldItemSvg(item.id, { x: 35, y: 35 })}</svg>${item.name} ×${left}</button>`;
+    return `<button data-item="${item.id}" class="${selectedItem === item.id ? 'selected' : ''} ${state.ok ? '' : 'unavailable'}" aria-disabled="${!state.ok}" title="${state.reason || item.gesture}"><svg viewBox="0 0 70 70" aria-hidden="true">${heldItemSvg(item.id, { x: 35, y: 35 })}</svg>${item.name} ×${left}${state.ok ? '' : `<small> · ${state.reason}</small>`}</button>`;
   }).join('') : '';
-  $('itemHint').textContent = b?.therapistId === 'bao_master' ? '包师傅拥有全部 20 件。灰色道具需切换场景、等待冷却、补足金币或重开本局；整蛊有拒绝与投诉风险。' : '各技师使用各自的道具箱；服务和道具择一操作。';
+  $('itemHint').textContent = b?.therapistId === 'bao_master' ? '包师傅购买后拥有全部 20 件；灰色道具会写明场景、冷却、金币或库存原因。' : '角色用金币购买；个人道具随当前关卡逐步开放。灰色道具可点击查看原因。';
   $('skill').disabled = !isActive() || b.energy < 100;
   $('appeal').disabled = !isActive() || b.level < 17 || b.appealUsed;
   $('keyboardAction').disabled = !isActive() || (!selectedService && !selectedItem);
@@ -146,7 +146,11 @@ $('services').onclick = event => {
 };
 $('items').onclick = event => {
   const id = event.target.closest('[data-item]')?.dataset.item;
-  if (id && itemAvailability(session.battle, id, session.progress.coins).ok) { selectedItem = id; selectedService = null; message = ''; render(); }
+  if (!id) return;
+  const availability = itemAvailability(session.battle, id, session.progress.coins);
+  if (availability.ok) { selectedItem = id; selectedService = null; message = `已选${itemById[id].name}，在画面热区操作。`; }
+  else message = `${itemById[id].name}暂不可用：${availability.reason}。`;
+  render();
 };
 $('skill').onclick = () => applyAction(b => useSkill(b));
 $('appeal').onclick = () => applyAction(b => appealComplaint(b));
@@ -451,17 +455,21 @@ const items = [
   { id:'feather', assetId:'item_feather', name:'羽毛', icon:'〃', group:'整蛊', scenes:['feet'], service:'prank', bonus:4, gesture:'羽尖轻扫' }
 ];
 const itemById = Object.fromEntries(items.map(item => [item.id, item]));
-const castInventory = {
-  charming_m: ['towel','oil','cake'],
-  charming_f: ['towel','oil','massage_cream','cake','milk_tea','feather'],
-  uncle: ['towel','oil','hot_stone','guasha','hammer','scrub'],
-  aunt: ['towel','oil','cake','basin','milk_tea'],
-  gentle: ['towel','oil','massage_cream','hot_stone','guasha','footcare'],
-  power: ['towel','oil','hammer','basin','scrub','footcare'],
-  joker: ['towel','oil','slipper','glow_slipper','banana','feather','cake'],
-  bao_master: items.map(item => item.id)
+// Item access follows the current battle level, independently of coin-purchased technician ownership.
+// Chapters introduce feet at L7 and legs at L13; Bao is revealed after L30 and receives all 20 on purchase.
+const castItemUnlocks = {
+  charming_m: { towel:1, oil:1, cake:3, milk_tea:7, feather:10, massage_cream:13, banana:16, healthy_meal:19, hot_stone:22, glow_slipper:28 },
+  charming_f: { towel:1, oil:1, massage_cream:3, cake:7, milk_tea:10, footcare:13, healthy_meal:16, feather:19, salt:22, glow_slipper:28 },
+  uncle: { towel:1, oil:1, massage_cream:3, hot_stone:7, hammer:10, scrub:13, guasha:16, basin:19, salt:22, footcare:28 },
+  aunt: { towel:1, oil:1, cake:3, basin:7, milk_tea:10, salt:13, healthy_meal:16, hotpot:19, footcare:22, feather:28 },
+  gentle: { towel:1, oil:1, massage_cream:3, hot_stone:7, guasha:10, footcare:13, healthy_meal:16, hammer:19, salt:22, feather:28 },
+  power: { towel:1, oil:1, massage_cream:3, hammer:7, basin:10, scrub:13, footcare:16, hot_stone:19, guasha:22, hotpot:28 },
+  joker: { towel:1, oil:1, cake:3, slipper:7, banana:10, feather:13, milk_tea:16, glow_slipper:19, massage_cream:22, durian:25, spatula:28 },
+  bao_master: Object.fromEntries(items.map(item => [item.id, 30]))
 };
-const playableFor = (cast, scene) => items.filter(item => castInventory[cast]?.includes(item.id) && item.scenes.includes(scene));
+const castInventory = Object.fromEntries(Object.entries(castItemUnlocks).map(([cast, unlocks]) => [cast, Object.keys(unlocks)]));
+const itemUnlockLevel = (cast, itemId) => castItemUnlocks[cast]?.[itemId] ?? Infinity;
+const playableFor = (cast, scene, level = 30) => items.filter(item => castInventory[cast]?.includes(item.id) && item.scenes.includes(scene) && (cast === 'bao_master' || itemUnlockLevel(cast, item.id) <= level));
 const offerZones = {
   back: { center: { x: 414, y: 348 }, rx: 52, ry: 47, label: '递给顾客' },
   legs: { center: { x: 405, y: 306 }, rx: 48, ry: 44, label: '递给顾客' },
@@ -470,13 +478,15 @@ const offerZones = {
 
 exports.items = items;
 exports.itemById = itemById;
+exports.castItemUnlocks = castItemUnlocks;
 exports.castInventory = castInventory;
+exports.itemUnlockLevel = itemUnlockLevel;
 exports.playableFor = playableFor;
 exports.offerZones = offerZones;
 };
 __factories["massage_mayhem_engine/item-rules.js"] = function(exports, __require){
 const { performService } = __require("massage_mayhem_engine/game-rules.js");
-const { castInventory, itemById, items } = __require("massage_mayhem_engine/item-catalog.js");
+const { castInventory, itemById, itemUnlockLevel, items } = __require("massage_mayhem_engine/item-catalog.js");
 
 const clamp = value => Math.max(0, Math.min(100, value));
 
@@ -510,6 +520,7 @@ function itemAvailability(battle, itemId, walletCoins = Infinity) {
   if (!item || !tuning) return { ok: false, reason: '未知道具' };
   if (!battle || battle.status !== 'playing') return { ok: false, reason: '当前没有可操作的顾客' };
   if (!castInventory[battle.therapistId]?.includes(itemId)) return { ok: false, reason: '该技师未拥有此道具' };
+  if (battle.therapistId !== 'bao_master' && (battle.itemPreviewLevel || battle.level) < itemUnlockLevel(battle.therapistId, itemId)) return { ok: false, reason: `第 ${itemUnlockLevel(battle.therapistId, itemId)} 关开放` };
   if (!item.scenes.includes(battle.scene)) return { ok: false, reason: '此场景不可用' };
   const used = battle.itemUses?.[itemId] || 0;
   if (used >= tuning.stock) return { ok: false, reason: '本局用尽' };

@@ -64,6 +64,7 @@ function reset(clearLog = false) {
   pointerId = null;
   queuedTool = null; queuedService = null; queuedSignature = false;
   battle = beginBattle({ id: `animation-qa-${++serial}`, level: 1, therapistId: cast, guestId: 'foodie', scene, rareOffered: false }, levels);
+  battle.itemPreviewLevel = 30; // Director sandbox previews full kits; campaign uses its real battle level.
   battle.energy = 100; // Director QA only; this never touches persistent progress.
   director = new InteractionDirector({ technicianId: cast, scene, onEvent: handleEvent, contactValidator: frame => {
     if (frame.signature && cast !== 'bao_master') return true; // Flying kiss and food offering have a separate gesture target.

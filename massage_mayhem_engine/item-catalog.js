@@ -24,17 +24,21 @@ export const items = [
   { id:'feather', assetId:'item_feather', name:'羽毛', icon:'〃', group:'整蛊', scenes:['feet'], service:'prank', bonus:4, gesture:'羽尖轻扫' }
 ];
 export const itemById = Object.fromEntries(items.map(item => [item.id, item]));
-export const castInventory = {
-  charming_m: ['towel','oil','cake'],
-  charming_f: ['towel','oil','massage_cream','cake','milk_tea','feather'],
-  uncle: ['towel','oil','hot_stone','guasha','hammer','scrub'],
-  aunt: ['towel','oil','cake','basin','milk_tea'],
-  gentle: ['towel','oil','massage_cream','hot_stone','guasha','footcare'],
-  power: ['towel','oil','hammer','basin','scrub','footcare'],
-  joker: ['towel','oil','slipper','glow_slipper','banana','feather','cake'],
-  bao_master: items.map(item => item.id)
+// Item access follows the current battle level, independently of coin-purchased technician ownership.
+// Chapters introduce feet at L7 and legs at L13; Bao is revealed after L30 and receives all 20 on purchase.
+export const castItemUnlocks = {
+  charming_m: { towel:1, oil:1, cake:3, milk_tea:7, feather:10, massage_cream:13, banana:16, healthy_meal:19, hot_stone:22, glow_slipper:28 },
+  charming_f: { towel:1, oil:1, massage_cream:3, cake:7, milk_tea:10, footcare:13, healthy_meal:16, feather:19, salt:22, glow_slipper:28 },
+  uncle: { towel:1, oil:1, massage_cream:3, hot_stone:7, hammer:10, scrub:13, guasha:16, basin:19, salt:22, footcare:28 },
+  aunt: { towel:1, oil:1, cake:3, basin:7, milk_tea:10, salt:13, healthy_meal:16, hotpot:19, footcare:22, feather:28 },
+  gentle: { towel:1, oil:1, massage_cream:3, hot_stone:7, guasha:10, footcare:13, healthy_meal:16, hammer:19, salt:22, feather:28 },
+  power: { towel:1, oil:1, massage_cream:3, hammer:7, basin:10, scrub:13, footcare:16, hot_stone:19, guasha:22, hotpot:28 },
+  joker: { towel:1, oil:1, cake:3, slipper:7, banana:10, feather:13, milk_tea:16, glow_slipper:19, massage_cream:22, durian:25, spatula:28 },
+  bao_master: Object.fromEntries(items.map(item => [item.id, 30]))
 };
-export const playableFor = (cast, scene) => items.filter(item => castInventory[cast]?.includes(item.id) && item.scenes.includes(scene));
+export const castInventory = Object.fromEntries(Object.entries(castItemUnlocks).map(([cast, unlocks]) => [cast, Object.keys(unlocks)]));
+export const itemUnlockLevel = (cast, itemId) => castItemUnlocks[cast]?.[itemId] ?? Infinity;
+export const playableFor = (cast, scene, level = 30) => items.filter(item => castInventory[cast]?.includes(item.id) && item.scenes.includes(scene) && (cast === 'bao_master' || itemUnlockLevel(cast, item.id) <= level));
 export const offerZones = {
   back: { center: { x: 414, y: 348 }, rx: 52, ry: 47, label: '递给顾客' },
   legs: { center: { x: 405, y: 306 }, rx: 48, ry: 44, label: '递给顾客' },

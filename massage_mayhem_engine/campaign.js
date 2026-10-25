@@ -76,9 +76,9 @@ function render() {
   $('items').innerHTML = b ? items.filter(item => castInventory[b.therapistId]?.includes(item.id)).map(item => {
     const state = itemAvailability(b, item.id, p.coins);
     const left = Math.max(0, itemTuning[item.id].stock - (b.itemUses?.[item.id] || 0));
-    return `<button data-item="${item.id}" class="${selectedItem === item.id ? 'selected' : ''}" ${state.ok ? '' : 'disabled'} title="${state.reason || item.gesture}"><svg viewBox="0 0 70 70" aria-hidden="true">${heldItemSvg(item.id, { x: 35, y: 35 })}</svg>${item.name} ×${left}</button>`;
+    return `<button data-item="${item.id}" class="${selectedItem === item.id ? 'selected' : ''} ${state.ok ? '' : 'unavailable'}" aria-disabled="${!state.ok}" title="${state.reason || item.gesture}"><svg viewBox="0 0 70 70" aria-hidden="true">${heldItemSvg(item.id, { x: 35, y: 35 })}</svg>${item.name} ×${left}${state.ok ? '' : `<small> · ${state.reason}</small>`}</button>`;
   }).join('') : '';
-  $('itemHint').textContent = b?.therapistId === 'bao_master' ? '包师傅拥有全部 20 件。灰色道具需切换场景、等待冷却、补足金币或重开本局；整蛊有拒绝与投诉风险。' : '各技师使用各自的道具箱；服务和道具择一操作。';
+  $('itemHint').textContent = b?.therapistId === 'bao_master' ? '包师傅购买后拥有全部 20 件；灰色道具会写明场景、冷却、金币或库存原因。' : '角色用金币购买；个人道具随当前关卡逐步开放。灰色道具可点击查看原因。';
   $('skill').disabled = !isActive() || b.energy < 100;
   $('appeal').disabled = !isActive() || b.level < 17 || b.appealUsed;
   $('keyboardAction').disabled = !isActive() || (!selectedService && !selectedItem);
@@ -141,7 +141,11 @@ $('services').onclick = event => {
 };
 $('items').onclick = event => {
   const id = event.target.closest('[data-item]')?.dataset.item;
-  if (id && itemAvailability(session.battle, id, session.progress.coins).ok) { selectedItem = id; selectedService = null; message = ''; render(); }
+  if (!id) return;
+  const availability = itemAvailability(session.battle, id, session.progress.coins);
+  if (availability.ok) { selectedItem = id; selectedService = null; message = `已选${itemById[id].name}，在画面热区操作。`; }
+  else message = `${itemById[id].name}暂不可用：${availability.reason}。`;
+  render();
 };
 $('skill').onclick = () => applyAction(b => useSkill(b));
 $('appeal').onclick = () => applyAction(b => appealComplaint(b));

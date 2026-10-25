@@ -1,5 +1,5 @@
 import { performService } from './game-rules.js';
-import { castInventory, itemById, items } from './item-catalog.js';
+import { castInventory, itemById, itemUnlockLevel, items } from './item-catalog.js';
 
 const clamp = value => Math.max(0, Math.min(100, value));
 
@@ -33,6 +33,7 @@ export function itemAvailability(battle, itemId, walletCoins = Infinity) {
   if (!item || !tuning) return { ok: false, reason: '未知道具' };
   if (!battle || battle.status !== 'playing') return { ok: false, reason: '当前没有可操作的顾客' };
   if (!castInventory[battle.therapistId]?.includes(itemId)) return { ok: false, reason: '该技师未拥有此道具' };
+  if (battle.therapistId !== 'bao_master' && (battle.itemPreviewLevel || battle.level) < itemUnlockLevel(battle.therapistId, itemId)) return { ok: false, reason: `第 ${itemUnlockLevel(battle.therapistId, itemId)} 关开放` };
   if (!item.scenes.includes(battle.scene)) return { ok: false, reason: '此场景不可用' };
   const used = battle.itemUses?.[itemId] || 0;
   if (used >= tuning.stock) return { ok: false, reason: '本局用尽' };

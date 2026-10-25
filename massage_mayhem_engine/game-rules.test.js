@@ -98,6 +98,7 @@ test('结算只发一次金币，解锁和冷却按已完成对局计', () => {
   assert.equal(first.payout, 82);
   assert.equal(first.progress.coins, 74);
   assert.equal(first.progress.unlockedLevel, 2);
+  assert.deepEqual(first.progress.unlockedTherapists, startProgress.unlockedTherapists);
   assert.equal(first.progress.completedRuns, 1);
   const second = settleBattle(first.progress, battle, levels);
   assert.equal(second.alreadySettled, true);
@@ -108,6 +109,16 @@ test('结算只发一次金币，解锁和冷却按已完成对局计', () => {
   const afterFailure = settleBattle(first.progress, failed, levels).progress;
   assert.equal(canUseTherapist(afterFailure, 'charming_f'), false);
   assert.equal(canUseTherapist({ ...afterFailure, completedRuns: 8 }, 'charming_f'), true);
+});
+
+test('关卡推进只开放道具等级，常规技师仍必须花金币购买', () => {
+  const progressed = { ...initialProgress(8), unlockedLevel: 19, completed: Array.from({ length: 18 }, (_, i) => i + 1), coins: 179 };
+  assert.equal(canUseTherapist(progressed, 'gentle'), false);
+  assert.equal(unlockTherapist(progressed, 'gentle').ok, false);
+  const purchased = unlockTherapist({ ...progressed, coins: 180 }, 'gentle');
+  assert.equal(purchased.ok, true);
+  assert.equal(purchased.progress.coins, 0);
+  assert.equal(canUseTherapist(purchased.progress, 'gentle'), true);
 });
 
 test('技能和申诉仅在满足条件时生效', () => {

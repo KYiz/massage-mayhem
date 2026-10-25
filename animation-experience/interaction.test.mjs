@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { InteractionDirector, sceneZones } from './interaction.js';
-import { castInventory, items } from './items.js';
+import { castInventory, itemById, itemUnlockLevel, items, playableFor } from './items.js';
 import { heldItemSvg } from './item-art.js';
 import { beginBattle } from '../massage_mayhem_engine/game-rules.js';
 import { itemAvailability, itemTuning, performItem } from './item-rules.js';
@@ -95,13 +95,28 @@ test('Bao can use all 19 documented props plus concept-image massage cream', () 
     assert.equal(d.tool, 'hand', item.id);
   }
 });
-test('scene restrictions and smaller inventories remain enforced', () => {
+test('scene restrictions and personal inventories remain enforced', () => {
   const baoBack = make('bao_master', 'back').d;
   assert.equal(baoBack.selectTool('basin'), false);
   assert.equal(baoBack.selectTool('hot_stone'), true);
   const ale = make('charming_m', 'feet').d;
-  assert.equal(ale.selectTool('feather'), false);
+  assert.equal(ale.selectTool('basin'), false);
   assert.equal(ale.selectTool('cake'), true);
+});
+test('personal items open with harder levels without granting the technician', () => {
+  const base = { status: 'playing', therapistId: 'charming_m', scene: 'back', level: 2, turns: 0, spentCoins: 0 };
+  assert.equal(itemUnlockLevel('charming_m', 'cake'), 3);
+  assert.match(itemAvailability(base, 'cake', 999).reason, /第 3 关/);
+  assert.equal(itemAvailability({ ...base, level: 3 }, 'cake', 999).ok, true);
+  assert.equal(itemAvailability({ ...base, level: 28, scene: 'feet' }, 'glow_slipper', 999).ok, true);
+  assert.equal(itemAvailability({ ...base, itemPreviewLevel: 30 }, 'cake', 999).ok, true);
+  const bao = { ...base, therapistId: 'bao_master' };
+  assert.equal(itemAvailability(bao, 'durian', 999).ok, true);
+  for (const id of ['charming_m','charming_f','uncle','aunt','gentle','power','joker']) {
+    const early = playableFor(id, 'back', 1);
+    assert.ok(early.length >= 2, `${id} needs an initial kit`);
+    assert.ok(early.every(item => ['gentle','food'].includes(itemById[item.id].service)), `${id} bypasses the early service tutorial`);
+  }
 });
 test('a held item can be deliberately returned before choosing another', () => {
   const { d, events } = make('bao_master', 'feet');
