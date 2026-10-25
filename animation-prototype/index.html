@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Massage Mayhem · 动画架构技术验证</title>
+<style>
+  :root{font:15px/1.45 system-ui,sans-serif;color:#f6e8d4;background:#241c1b}*{box-sizing:border-box}body{margin:0;padding:22px}main{max-width:1100px;margin:auto}h1{font-size:28px;margin:0 0 6px}p{margin:6px 0 16px;color:#d9c0a8}.bar,.panel{background:#392823;border:1px solid #9c734c;border-radius:14px;padding:14px;margin:10px 0}.bar{display:flex;gap:12px;flex-wrap:wrap;align-items:end}label{display:grid;gap:4px;min-width:155px}select,button{font:inherit;border:1px solid #ae8152;border-radius:8px;background:#f1dfbe;color:#392722;padding:8px 11px}button{cursor:pointer}button:hover:not(:disabled){background:#ffe3a5}button:disabled{opacity:.45;cursor:not-allowed}.actions{display:flex;flex-wrap:wrap;gap:8px}.moods button{background:#d4e5d9}canvas{display:block;width:100%;height:auto;border:3px solid #b38b57;border-radius:12px;background:#392823}.metrics{font-variant-numeric:tabular-nums}.small{font-size:13px;color:#d6bfa4}ul{margin:8px 0;padding-left:20px;max-height:185px;overflow:auto}li{margin:3px 0}#status{font-weight:600;color:#ffdb9a}@media(max-width:600px){body{padding:10px}h1{font-size:22px}label{flex:1 1 130px}}
+</style></head><body><main>
+  <h1>Massage Mayhem · 动画系统技术验证</h1>
+  <p>通用动作驱动三种不同体型；下方程序图形仅供技术验收，不是正式角色美术。</p>
+  <div class="bar"><label>技师<select id="technician"></select></label><label>顾客<select id="guest"></select></label><label>场景姿态<select id="scene"></select></label><label style="min-width:220px"><span>正式素材接口</span><span><input id="assetMode" type="checkbox"> 尝试加载分层 PNG（缺失时回退图形）</span></label></div>
+  <canvas id="stage" width="960" height="540" aria-label="角色骨骼、手部动作和顾客反馈演示"></canvas>
+  <div class="panel"><div id="status"></div><div id="handInfo" class="metrics small"></div></div>
+  <div class="panel"><strong>共用动作接口</strong><div class="actions">
+    <button data-action="idle">待机</button><button data-action="walk">行走</button><button data-action="turn">转身</button><button data-action="reach">伸手</button><button data-action="massage">按摩</button><button data-action="take_tool">拿道具</button><button data-action="happy">开心</button><button data-action="angry">愤怒</button><button data-action="fail">失败</button><button id="signature" data-action="signature">专属技能</button>
+  </div></div>
+  <div class="panel moods"><strong>顾客表情反馈</strong><div class="actions"><button data-mood="neutral">中性</button><button data-mood="relaxed">放松</button><button data-mood="delighted">非常舒服</button><button data-mood="uncomfortable">不适</button><button data-mood="angry">愤怒</button><button data-mood="refused">拒绝</button><button data-mood="shocked">震惊</button></div></div>
+  <div class="panel moods"><strong>顾客共用动作</strong><div class="actions"><button data-guest-action="enter">入场</button><button data-guest-action="idle">待机</button><button data-guest-action="relaxed">舒服</button><button data-guest-action="pain">疼痛</button><button data-guest-action="refuse">拒绝</button><button data-guest-action="complain">投诉</button><button data-guest-action="leave">离场</button></div></div>
+  <div class="panel"><strong>动画事件</strong><ul id="events"></ul><p class="small">在按摩动作完成前点击另一动作，可验证中断事件与 0.18 秒姿势混合。包师傅技能只在足疗场景可用。</p></div>
+  <script type="module" src="./dist/main.js"></script>
+</main></body></html>
