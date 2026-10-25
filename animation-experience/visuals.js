@@ -1,6 +1,7 @@
 import { solveTwoBoneIK } from '../animation-prototype/dist/core.js';
 import { sceneZones } from './interaction.js';
 import { heldItemSvg, itemEffectSvg } from './item-art.js';
+import { itemById } from './items.js';
 
 const art = {
   back: '../art/concepts/S1_开背_空场景概念.png',
@@ -57,7 +58,9 @@ export class VisualStage {
     const reachNeeded = Math.hypot(frame.target.x - (b + s.width * .78), frame.target.y - (y + shoulderY));
     const shift = Math.max(0, Math.min(180, reachNeeded - (s.upper + s.lower - 10))) * frame.reach;
     const rootX = b + shift - (frame.approach || 0) * (this.technicianId === 'charming_m' ? 105 : this.technicianId === 'aunt' ? 75 : 63);
-    const lean = frame.reach * (12 + frame.pressure * 9);
+    const item = itemById[frame.tool];
+    const weight = ['basin','hotpot','hammer','hot_stone'].includes(frame.tool) ? 6 : frame.tool === 'feather' ? -4 : 0;
+    const lean = frame.reach * (12 + frame.pressure * 9 + weight);
     const gait = (frame.approach || 0) > 0 ? Math.sin(time * (this.technicianId === 'charming_m' ? 17 : this.technicianId === 'aunt' ? 12 : 9)) : 0;
     const idleBob = frame.phase === 'observe' ? Math.sin(time * 1.7) * 2.5 : gait * (this.technicianId === 'aunt' ? 3 : 5);
     set(this.parts.actor, { transform: `translate(${p(rootX)} ${p(y + idleBob)})` });
@@ -67,13 +70,18 @@ export class VisualStage {
     const baseRight = { x: s.width * .78 + lean * .6, y: shoulderY + frame.pressure * 5 };
     const baseLeft = { x: -s.width * .78 + lean * .33, y: shoulderY + frame.pressure * 5 };
     const target = { x: frame.target.x - rootX, y: frame.target.y - y + frame.pressure * 4 };
+    if (frame.contactActive && item) {
+      if (['guasha','towel','banana','slipper','glow_slipper','feather'].includes(frame.tool)) target.x += Math.sin(time * (frame.tool === 'feather' ? 17 : 8)) * 5;
+      if (['hammer','scrub','footcare','hot_stone'].includes(frame.tool)) target.y += Math.sin(time * (frame.tool === 'hammer' ? 17 : 10)) * 5;
+      if (frame.tool === 'oil' || frame.tool === 'massage_cream') target.y += Math.sin(time * 7) * 2;
+    }
     const idleRight = { x: s.width + 30, y: -75 };
     const idleLeft = { x: -s.width - 21, y: -79 };
     const toolTake = frame.phase === 'toolTake';
     const isOffer = frame.signature && this.technicianId === 'aunt';
     const isKiss = frame.signature && this.technicianId === 'charming_m';
     const rightDest = isKiss ? { x: 54, y: -226 } : isOffer ? { x: 150, y: -167 } : toolTake ? { x: -35, y: -35 } : target;
-    const leftDest = isKiss ? { x: 12, y: -197 } : isOffer ? { x: 65, y: -106 } : this.scene === 'feet' ? { x: target.x - 49, y: target.y + 10 } : { x: target.x - 25, y: target.y + 3 };
+    const leftDest = isKiss ? { x: 12, y: -197 } : isOffer ? { x: 65, y: -106 } : ['basin','hotpot','healthy_meal','cake'].includes(frame.tool) ? { x: target.x - 22, y: target.y + 9 } : this.scene === 'feet' ? { x: target.x - 49, y: target.y + 10 } : { x: target.x - 25, y: target.y + 3 };
     const ratio = toolTake ? Math.min(1, frame.phaseProgress) : frame.reach;
     const handR = { x: idleRight.x + (rightDest.x - idleRight.x) * ratio, y: idleRight.y + (rightDest.y - idleRight.y) * ratio };
     const handL = { x: idleLeft.x + (leftDest.x - idleLeft.x) * ratio, y: idleLeft.y + (leftDest.y - idleLeft.y) * ratio };
@@ -84,7 +92,8 @@ export class VisualStage {
     let tool = '';
     if (frame.toolHeld || toolTake || isOffer) {
       const hand = isOffer ? left.hand : right.hand;
-      tool = frame.tool === 'hand' && isOffer ? heldItemSvg('cake', hand) : heldItemSvg(frame.tool, hand, frame.contactActive && frame.tool === 'oil' ? -28 : 0);
+      const tilt = frame.contactActive ? frame.tool === 'oil' || frame.tool === 'salt' ? -28 : frame.tool === 'hammer' ? Math.sin(time * 17) * 12 : frame.tool === 'feather' ? Math.sin(time * 16) * 10 : 0 : 0;
+      tool = frame.tool === 'hand' && isOffer ? heldItemSvg('cake', hand) : heldItemSvg(frame.tool, hand, tilt);
     }
     this.parts.toolLayer.innerHTML = tool;
     const gold = frame.gold;

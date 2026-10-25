@@ -100,7 +100,8 @@ export class InteractionDirector {
   }
   beginContact() {
     if (!this.contactValidator(this.frame())) { this.interrupt('missed-contact'); return; }
-    this.contactActive = true; this.holdTime = 0; this.guestMood = 'responding'; this.effectTime = 0;
+    this.contactActive = true; this.holdTime = 0; this.guestMood = itemById[this.tool]?.service === 'prank' ? 'uncomfortable' : 'responding'; this.effectTime = 0;
+    if (this.guestMood === 'uncomfortable') this.guestRecoil = .4;
     this.enter('hold'); this.emit('contactStart', { target: { ...this.target }, signature: this.signature });
     if (this.signature && !this.committed) { this.committed = true; this.emit('skillImpact', { signature: true }); }
   }
@@ -110,8 +111,7 @@ export class InteractionDirector {
     const path = this.pathLength < 8 ? .65 : clamp(this.pathLength / 140);
     const stability = 1 - clamp(Math.max(0, this.pressure - .85) * 2);
     const completion = clamp(this.holdTime / .55);
-    const toolBonus = this.toolHeld ? (itemById[this.tool]?.bonus || 0) : 0;
-    return Math.round(clamp((.4 * landing + .25 * path + .2 * stability + .15 * completion) * 100 + toolBonus, 0, 100));
+    return Math.round(clamp((.4 * landing + .25 * path + .2 * stability + .15 * completion) * 100, 0, 100));
   }
   beginRelease() {
     if (this.phase !== 'hold') return;

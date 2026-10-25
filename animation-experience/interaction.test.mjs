@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { InteractionDirector, sceneZones } from './interaction.js';
 import { castInventory, items } from './items.js';
 import { heldItemSvg } from './item-art.js';
+import { beginBattle } from '../massage_mayhem_engine/game-rules.js';
+import { itemAvailability, itemTuning, performItem } from './item-rules.js';
 
 function advance(d, seconds) { for (let t = 0; t < seconds; t += .02) d.update(.02); }
 function make(id = 'charming_m', scene = 'back') { const events = []; return { d: new InteractionDirector({ technicianId: id, scene, onEvent: e => events.push(e) }), events }; }
@@ -61,12 +63,12 @@ test('tool take and return bracket the actual contact', () => {
   assert.ok(events.findIndex(e => e.type === 'toolHeld') < events.findIndex(e => e.type === 'contactStart'));
   assert.ok(events.findIndex(e => e.type === 'contactEnd') < events.findIndex(e => e.type === 'toolReturned'));
 });
-test('a held comfort tool changes the quality sent to the existing rule engine', () => {
+test('tool quality is scored once, then tuned by its item rule', () => {
   const bare = make(), oil = make();
   bare.d.pointerDown(sceneZones.back.center); bare.d.pointerUp(); advance(bare.d, 1);
   oil.d.selectTool('oil'); advance(oil.d, .45);
   oil.d.pointerDown(sceneZones.back.center); oil.d.pointerUp(); advance(oil.d, 1);
-  assert.equal(oil.events.find(e => e.type === 'commit').quality - bare.events.find(e => e.type === 'commit').quality, 8);
+  assert.equal(oil.events.find(e => e.type === 'commit').quality, bare.events.find(e => e.type === 'commit').quality);
 });
 test('Bao skill can only hit the foot scene and fires once', () => {
   const back = make('bao_master', 'back'); assert.equal(back.d.startSignature(), false);
@@ -109,4 +111,42 @@ test('a held item can be deliberately returned before choosing another', () => {
   advance(d, .7);
   assert.equal(d.tool, 'hand'); assert.equal(count(events, 'toolReturned'), 1);
   assert.equal(d.selectTool('feather'), true);
+});
+test('all Bao items have distinct rule settings and produce a traceable item result', () => {
+  const levels = [{ level:1, comfortGoal:99, patience:90, maxActions:50, servicePool:['gentle','strong','food','prank'], scenePool:['back','legs','feet'] }];
+  assert.equal(Object.keys(itemTuning).length, 20);
+  for (const item of items) {
+    const battle = beginBattle({ id:`qa-${item.id}`, level:1, therapistId:'bao_master', guestId:'foodie', scene:item.scenes[0], rareOffered:false }, levels);
+    assert.equal(itemAvailability(battle, item.id, 999).ok, true, item.id);
+    const result = performItem(battle, levels, item.id, 70, 999);
+    assert.equal(result.turns, 1, item.id);
+    assert.equal(result.itemUses[item.id], 1, item.id);
+    assert.ok(result.log.some(entry => entry.type === 'item' && entry.itemId === item.id), item.id);
+    assert.equal(battle.itemUses, undefined, 'the original battle must stay unchanged');
+  }
+});
+test('item stock, cooldown, scene and affordability block invalid use', () => {
+  const levels = [{ level:1, comfortGoal:99, patience:90, maxActions:50, servicePool:['gentle','strong','food','prank'], scenePool:['back','legs','feet'] }];
+  const fresh = beginBattle({ id:'qa-stock', level:1, therapistId:'bao_master', guestId:'foodie', scene:'feet', rareOffered:false }, levels);
+  assert.equal(itemAvailability(fresh, 'hot_stone').reason, '此场景不可用');
+  assert.equal(itemAvailability(fresh, 'cake', 5).reason, '金币不足');
+  const used = performItem(fresh, levels, 'oil', 70, 999);
+  assert.match(itemAvailability(used, 'oil', 999).reason, /冷却/);
+  const exhausted = { ...fresh, itemUses: { oil: itemTuning.oil.stock } };
+  assert.equal(itemAvailability(exhausted, 'oil').reason, '本局用尽');
+});
+test('Bao can use a personally owned item even when an early level omits its service family', () => {
+  const levels = [{ level:1, comfortGoal:99, patience:90, maxActions:50, servicePool:['gentle'], scenePool:['back'] }];
+  const battle = beginBattle({ id:'qa-early', level:1, therapistId:'bao_master', guestId:'foodie', scene:'back', rareOffered:false }, levels);
+  const result = performItem(battle, levels, 'durian', 70, 999);
+  assert.equal(result.turns, 1);
+  assert.ok(result.log.some(entry => entry.type === 'item' && entry.itemId === 'durian'));
+  assert.deepEqual(levels[0].servicePool, ['gentle']);
+});
+test('an item risk modifier can override a comfort win with a complaint failure', () => {
+  const levels = [{ level:1, comfortGoal:1, patience:90, maxActions:50, servicePool:['prank'], scenePool:['back'] }];
+  const start = beginBattle({ id:'qa-risk', level:1, therapistId:'bao_master', guestId:'foodie', scene:'back', rareOffered:false }, levels);
+  const result = performItem({ ...start, complaint:98 }, levels, 'durian', 80, 999);
+  assert.equal(result.status, 'complaint_failed');
+  assert.equal(result.log.filter(entry => entry.type === 'end').length, 1);
 });

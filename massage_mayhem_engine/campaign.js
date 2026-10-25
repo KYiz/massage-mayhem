@@ -1,4 +1,7 @@
 import { guests, therapists } from './engine.js';
+import { castInventory, itemById, items } from './item-catalog.js';
+import { itemAvailability, itemTuning, performItem } from './item-rules.js';
+import { heldItemSvg } from './item-art.js';
 import {
   SAVE_VERSION, initialProgress, validateLevels, canUseTherapist, unlockTherapist,
   visibleTherapists, therapistUnlockStatus,
@@ -23,8 +26,9 @@ function loadSession() {
 }
 
 let session = loadSession();
-let therapistIndex = 0;
+let therapistIndex = Math.max(0, visibleTherapists(session.progress).findIndex(t => t.id === session.battle?.therapistId));
 let selectedService = null;
+let selectedItem = null;
 let gesture = null;
 let message = '';
 
@@ -69,11 +73,18 @@ function render() {
   const actor = b && therapists.find(t => t.id === b.therapistId);
   if (actor?.portrait) $('actor').innerHTML = `<img src="${actor.portrait}" alt="${actor.name}">`;
   else $('actor').textContent = actor?.gender === '女' ? '👩‍⚕️' : '🧑‍⚕️';
-  $('stageNote').textContent = selectedService ? `已选 ${selectedService} · 拖动操作` : '先选服务';
+  $('heldItem').innerHTML = selectedItem ? `<svg viewBox="0 0 70 70" role="img" aria-label="${itemById[selectedItem].name}">${heldItemSvg(selectedItem, { x: 35, y: 35 })}</svg>` : '';
+  $('stageNote').textContent = selectedItem ? `已选 ${itemById[selectedItem].name} · 在热区操作` : selectedService ? `已选 ${selectedService} · 拖动操作` : '先选服务或道具';
   $('services').innerHTML = b ? availableServices(b, levels).map(s => `<button data-service="${s.id}" class="${selectedService === s.id ? 'selected' : ''}" ${!isActive() || p.coins - b.spentCoins < s.cost ? 'disabled' : ''}>${s.name}${s.cost ? ` −${s.cost} 金币` : ''}</button>`).join('') : '';
+  $('items').innerHTML = b ? items.filter(item => castInventory[b.therapistId]?.includes(item.id)).map(item => {
+    const state = itemAvailability(b, item.id, p.coins);
+    const left = Math.max(0, itemTuning[item.id].stock - (b.itemUses?.[item.id] || 0));
+    return `<button data-item="${item.id}" class="${selectedItem === item.id ? 'selected' : ''}" ${state.ok ? '' : 'disabled'} title="${state.reason || item.gesture}"><svg viewBox="0 0 70 70" aria-hidden="true">${heldItemSvg(item.id, { x: 35, y: 35 })}</svg>${item.name} ×${left}</button>`;
+  }).join('') : '';
+  $('itemHint').textContent = b?.therapistId === 'bao_master' ? '包师傅拥有全部 20 件。灰色道具需切换场景、等待冷却、补足金币或重开本局；整蛊有拒绝与投诉风险。' : '各技师使用各自的道具箱；服务和道具择一操作。';
   $('skill').disabled = !isActive() || b.energy < 100;
   $('appeal').disabled = !isActive() || b.level < 17 || b.appealUsed;
-  $('keyboardAction').disabled = !isActive() || !selectedService;
+  $('keyboardAction').disabled = !isActive() || (!selectedService && !selectedItem);
   $('log').textContent = b ? b.log.slice(-14).reverse().map(e => e.message).join('\n') : '接单后在这里查看每次操作结果。';
   $('message').textContent = message;
 }
@@ -89,6 +100,7 @@ function applyAction(action) {
   try {
     session.battle = action(session.battle);
     finishIfNeeded();
+    if (selectedItem && !itemAvailability(session.battle, selectedItem, session.progress.coins).ok) selectedItem = null;
     save();
     render();
   } catch (error) { message = error.message; render(); }
@@ -99,6 +111,7 @@ function launch(acceptRare) {
   session.battle = beginBattle(session.offer, levels, acceptRare);
   session.offer = null;
   selectedService = null;
+  selectedItem = null;
   message = '';
   save(); render();
 }
@@ -119,7 +132,7 @@ $('start').onclick = () => {
     session.offer = result.offer.rareOffered ? result.offer : null;
     session.battle = null;
     if (!result.offer.rareOffered) session.battle = beginBattle(result.offer, levels);
-    selectedService = null; message = '';
+    selectedService = null; selectedItem = null; message = '';
     save(); render();
   } catch (error) { message = error.message; render(); }
 };
@@ -127,17 +140,22 @@ $('accept').onclick = () => launch(true);
 $('decline').onclick = () => launch(false);
 $('services').onclick = event => {
   const id = event.target.closest('[data-service]')?.dataset.service;
-  if (id && isActive()) { selectedService = id; message = ''; render(); }
+  if (id && isActive()) { selectedService = id; selectedItem = null; message = ''; render(); }
+};
+$('items').onclick = event => {
+  const id = event.target.closest('[data-item]')?.dataset.item;
+  if (id && itemAvailability(session.battle, id, session.progress.coins).ok) { selectedItem = id; selectedService = null; message = ''; render(); }
 };
 $('skill').onclick = () => applyAction(b => useSkill(b));
 $('appeal').onclick = () => applyAction(b => appealComplaint(b));
 $('keyboardAction').onclick = () => {
-  if (selectedService) applyAction(b => performService(b, levels, selectedService, 70, session.progress.coins));
+  if (selectedItem) applyAction(b => performItem(b, levels, selectedItem, 70, session.progress.coins));
+  else if (selectedService) applyAction(b => performService(b, levels, selectedService, 70, session.progress.coins));
 };
 
 const stage = $('stage');
 stage.addEventListener('pointerdown', event => {
-  if (!isActive() || !selectedService) return;
+  if (!isActive() || (!selectedService && !selectedItem)) return;
   const rect = $('target').getBoundingClientRect();
   const hit = event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
   gesture = { id: event.pointerId, x: event.clientX, y: event.clientY, lastX: event.clientX, lastY: event.clientY, length: 0, start: performance.now(), hit };
@@ -159,7 +177,7 @@ stage.addEventListener('pointerup', event => {
   const quality = Math.round((gesture.hit ? 50 : 0) + 30 * distanceFit * timeFit + 20 * speedFit);
   gesture = null;
   message = `操作质量 ${quality}/100`;
-  applyAction(b => performService(b, levels, selectedService, quality, session.progress.coins));
+  applyAction(b => selectedItem ? performItem(b, levels, selectedItem, quality, session.progress.coins) : performService(b, levels, selectedService, quality, session.progress.coins));
 });
 stage.addEventListener('pointercancel', () => { gesture = null; });
 

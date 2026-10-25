@@ -2,6 +2,7 @@ import { beginBattle, performService, useSkill } from '../massage_mayhem_engine/
 import { InteractionDirector } from './interaction.js';
 import { VisualStage } from './visuals.js';
 import { castInventory, itemById, items } from './items.js';
+import { itemAvailability, itemTuning, performItem } from './item-rules.js';
 
 const $ = selector => document.querySelector(selector);
 const stage = $('#stage');
@@ -33,7 +34,7 @@ function renderInventory() {
   $('#inventory').innerHTML = `<div class="propgrid"><button data-id="hand" class="active">✋ 徒手</button></div>` + groups.map(group => {
     const groupItems = owned.filter(item => item.group === group);
     if (!groupItems.length) return '';
-    return `<div class="propgroup"><strong>${group}</strong><div class="propgrid">${groupItems.map(item => `<button data-id="${item.id}" title="${item.gesture}｜${item.scenes.map(key => names[key]).join('、')}" class="${item.scenes.includes(scene) ? '' : 'offscene'}" ${item.scenes.includes(scene) ? '' : 'disabled'}>${item.icon} ${item.name}</button>`).join('')}</div></div>`;
+    return `<div class="propgroup"><strong>${group}</strong><div class="propgrid">${groupItems.map(item => { const available = itemAvailability(battle, item.id, 999); const remaining = Math.max(0, itemTuning[item.id].stock - (battle.itemUses?.[item.id] || 0)); return `<button data-id="${item.id}" title="${item.gesture}｜${item.scenes.map(key => names[key]).join('、')}｜${available.reason || `本局剩余 ${remaining} 次`}" class="${item.scenes.includes(scene) ? '' : 'offscene'}" ${available.ok ? '' : 'disabled'}>${item.icon} ${item.name} <small>×${remaining}</small></button>`; }).join('')}</div></div>`;
   }).join('');
   selectGroup('tool', tool);
   $('#toolTip').textContent = tool === 'hand' ? '选择道具后，在虚线区域点击、长按或拖动。招待类的虚线热区会移到顾客面前。' : `${itemById[tool].name}：${itemById[tool].gesture}；适用${itemById[tool].scenes.map(key => names[key]).join('、')}。`;
@@ -73,16 +74,16 @@ function handleEvent(event) {
     case 'started': log(`#${event.interactionId} ${event.signature ? '专属技能开始' : '锁定接触点'}`); break;
     case 'toolHeld': log(`${itemById[event.tool]?.name || '道具'}已握持；${itemById[event.tool]?.gesture || ''}。`); break;
     case 'toolReturned': log(`${itemById[event.returnedTool]?.name || '道具'}离开顾客并归位。`); break;
-    case 'toolSelected': if (event.tool === 'hand') { tool = 'hand'; selectGroup('tool', tool); $('#toolTip').textContent = '徒手模式；选择道具可切换动作和规则。'; } break;
+    case 'toolSelected': if (event.tool === 'hand') { tool = 'hand'; renderInventory(); $('#toolTip').textContent = '徒手模式；选择道具可切换动作和规则。'; } break;
     case 'contactStart': log(`#${event.interactionId} 技师接触 → 顾客开始反馈`); break;
     case 'contactEnd': log(`#${event.interactionId} 接触结束 → 顾客停止持续反馈（${event.reason}）`); break;
     case 'commit': {
       if (battle.status !== 'playing') break;
       const before = battle;
-      battle = performService(battle, levels, event.service, event.quality, 999);
+      battle = event.tool === 'hand' ? performService(battle, levels, event.service, event.quality, 999) : performItem(battle, levels, event.tool, event.quality, 999);
       const toolName = event.tool === 'hand' ? '徒手' : itemById[event.tool]?.name || event.tool;
       log(`#${event.interactionId} ${toolName}${event.interrupted ? '受打断' : '完成'}，质量 ${event.quality}；舒适 ${battle.comfort - before.comfort >= 0 ? '+' : ''}${battle.comfort - before.comfort}，投诉 ${battle.complaint - before.complaint >= 0 ? '+' : ''}${battle.complaint - before.complaint}。`);
-      updateMetrics();
+      updateMetrics(); renderInventory();
       break;
     }
     case 'skillImpact': {
@@ -106,6 +107,7 @@ document.querySelectorAll('[data-group="service"] button').forEach(button => but
 $('#inventory').addEventListener('click', event => {
   const button = event.target.closest('button[data-id]');
   if (!button || button.disabled) return;
+  if (button.dataset.id !== 'hand' && !itemAvailability(battle, button.dataset.id, 999).ok) return;
   if (director.selectTool(button.dataset.id)) {
     tool = director.tool; selectGroup('tool', tool);
     $('#toolTip').textContent = director.phase === 'toolReturn' ? `${itemById[tool].name}正在归位。` : tool === 'hand' ? '徒手模式。' : `${itemById[tool].name}：${itemById[tool].gesture}；按提示虚线区域操作。`;

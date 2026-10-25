@@ -74,7 +74,7 @@ catch {
   await page.locator('#inventory button[data-id="cake"]').click(); await ready();
   await clickZone(507, 222); await page.waitForTimeout(1150);
   const food = await page.evaluate(() => window.animationQA.state.battle);
-  if (food.turns !== 1 || food.spentCoins !== 8 || !food.log.some(e => e.message?.includes('美食招待'))) throw Error('cake did not run food service');
+  if (food.turns !== 1 || food.spentCoins !== 10 || !food.log.some(e => e.message?.includes('美食招待'))) throw Error('cake did not run food service');
   await page.locator('[data-group="scene"] [data-id="back"]').click(); await ready();
   await page.locator('#inventory button[data-id="durian"]').click(); await ready();
   await clickZone(); await page.waitForTimeout(1150);
